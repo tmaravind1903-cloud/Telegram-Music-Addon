@@ -759,7 +759,7 @@ async function parseTrackMessage(msg, cacheMedia = true, customTrackId = null, i
     qualityText = `+formatName.toUpperCase()} (+rawKbps || 320}kbps)`;
   }
 
-const keep = isReadOnlyChannel  msgText.toLowerCase().includes('/keep')  msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
+const keep = Boolean(isReadOnlyChannel)  msgText.toLowerCase().includes('/keep')  msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
 
   return {
     id: trackIdStr,
@@ -1495,7 +1495,7 @@ async function buildTrackIndex() {
 
 // Scan read-only EXTRA_CHANNELS
     for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
-      const extraTitle = extraEntity.title  extraEntity.username  peerIdStr;
+      const extraTitle = extraEntity.title || extraEntity.username || peerIdStr;
       logCli('INDEX', Scanning extra channel: +BOLD}+extraTitle}+RESET}...);
       let extraCount = 0;
 
@@ -3171,7 +3171,7 @@ async function startTelegramService() {
       return;
     }
 extraChannelEntities.clear();
-    const extraRaw = cleanEnv(process.env.EXTRA_CHANNELS)  env.EXTRA_CHANNELS  EXTRA_CHANNELS_RAW;
+    const extraRaw = cleanEnv(process.env.EXTRA_CHANNELS) || env.EXTRA_CHANNELS || EXTRA_CHANNELS_RAW;
     if (extraRaw) {
       const extraList = extraRaw.split(',').map((s) => s.trim()).filter(Boolean);
       for (const extraInput of extraList) {
