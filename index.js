@@ -333,7 +333,7 @@ function loadCache() {
         indexTrackKeywords(t);
         trackIndex.push(t);
       }
-      logCli('CACHE', `Loaded +BOLD}+trackIndex.length}+RESET} tracks from +source}`);
+      logCli('CACHE', `Loaded +BOLD${trackIndex.length${RESET} tracks from +source}`);
       updateMediaCacheCapacity();
       rebuildWebDavFileMap();
 
@@ -429,29 +429,30 @@ function getAudioAttr(msg) {
 }
 
 function getBaseUrl(req) {
-  const prefix = req.secretPrefix ? `/+req.secretPrefix+}` : '';
+  const prefix = req.secretPrefix ? '/' + req.secretPrefix : '';
   const configuredPublic = (process.env.PUBLIC_URL || process.env.CUSTOM_PUBLIC_URL || '').trim().replace(/\/+$/, '');
   if (configuredPublic) {
-    return `+configuredPublic}+prefix}`;
+    return configuredPublic + prefix;
   }
 
   const tunnelUrl = typeof tunnel !== 'undefined' && tunnel && typeof tunnel.getTunnelUrl === 'function' ? tunnel.getTunnelUrl() : null;
   const forwardedHost = req.headers['x-forwarded-host'];
-  const reqHost = req.get('host') || `localhost:+PORT}`;
+  const reqHost = req.get('host') || 'localhost:' + PORT;
   const host = forwardedHost || reqHost;
   const isLocalHost = host.startsWith('localhost') || host.startsWith('127.0.0.1') || host.startsWith('0.0.0.0');
 
   if (!isLocalHost) {
     const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    return `+proto}://+host}+prefix}`;
+    return proto + '://' + host + prefix;
   }
-
   if (tunnelUrl) {
-    return `+tunnelUrl.replace(/\/+$/, '')}+prefix}`;
+    return tunnelUrl.replace(/\/+$/, '') + prefix;
   }
+  return 'http://' + host + prefix;
+}
 
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  return `+proto}://+host}+prefix}`;
+  return `+proto}://+host${prefix}`;
 }
 
 async function getMediaChunk(media, offset = 0, maxBytes = 128 * 1024) {
@@ -576,7 +577,7 @@ async function prewarmTrackPreamble(trackId, media, title) {
             const sizeFormatted = preamble.length >= 1024 * 1024
               ? `+(preamble.length / (1024 * 1024)).toFixed(1)} MB`
               : `+Math.round(preamble.length / 1024)} KB`;
-            logCli('BUFFER', `Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+idStr}+RESET}`);
+            logCli('BUFFER', `Prewarmed +BOLD${sizeFormatted${RESET} -> ID: +BOLD${idStr${RESET}`);
           }
         }
         iter.left = 0;
@@ -950,7 +951,7 @@ function loadNotificationState() {
       if (data && Array.isArray(data.sentDigests)) notifState.sentDigests = data.sentDigests;
       if (data && typeof data.lastDigestSent === 'number') notifState.lastDigestSent = data.lastDigestSent;
       if (notifState.pending.length > 0 || notifState.sentDigests.length > 0) {
-        logCli('DIGEST', `Restored +BOLD}+notifState.pending.length}+RESET} pending notifications, +BOLD}+notifState.sentDigests.length}+RESET} active digest(s)`);
+        logCli('DIGEST', `Restored +BOLD${notifState.pending.length${RESET} pending notifications, +BOLD${notifState.sentDigests.length${RESET} active digest(s)`);
       }
     }
   } catch (err) {
@@ -1268,7 +1269,7 @@ function flushUploadBatch() {
   if (uploadBatch.length === 0) return;
   for (const t of uploadBatch) {
     const spec = t.isAtmos ? 'Dolby Atmos' : (t.quality || describeTrackQuality(t) || t.format);
-    logCli('INDEX', `+ITALIC}+t.title}+RESET} • +BOLD}+t.artist}+RESET} • +BOLD}+spec}+RESET}`);
+    logCli('INDEX', `+ITALIC${t.title${RESET} • +BOLD${t.artist${RESET} • +BOLD${spec${RESET}`);
   }
   uploadBatch = [];
   uploadBatchTimer = null;
@@ -1309,7 +1310,7 @@ async function processTrackUpload(newTrack) {
 
   if (scoreNew > scoreOld) {
     // Incoming track is HIGHER quality (e.g. 24/192 replacing 16/44.1, or FLAC replacing MP3)
-    logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} -> Upgraded from +describeTrackQuality(existingDup)} to +BOLD}+describeTrackQuality(newTrack)}+RESET} (Replacing ID: +existingDup.id})`);
+    logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} -> Upgraded from +describeTrackQuality(existingDup)} to +BOLD${describeTrackQuality(newTrack)${RESET} (Replacing ID: +existingDup.id})`);
 
     await deleteTelegramMessage(existingDup.id);
 
@@ -1337,7 +1338,7 @@ async function processTrackUpload(newTrack) {
     const reason = isLower ? 'lower_quality' : 'identical';
     const graceHours = Math.round(DUPLICATE_GRACE_PERIOD_MS / (60 * 60 * 1000));
     const graceText = graceHours >= 1 ? `+graceHours} hours` : `+Math.round(DUPLICATE_GRACE_PERIOD_MS / 1000)}s`;
-    logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} (ID: +BOLD}+newTrack.id}+RESET}) -> +reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy'} (Deleting in +graceText}, send /keep to save)`);
+    logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} (ID: +BOLD${newTrack.id${RESET}) -> +reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy'} (Deleting in +graceText}, send /keep to save)`);
 
     pendingDeletions.set(String(newTrack.id), {
       timer: null,
@@ -1361,7 +1362,7 @@ async function processTrackUpload(newTrack) {
 
     const timer = setTimeout(async () => {
       pendingDeletions.delete(String(newTrack.id));
-      logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} (ID: +BOLD}+newTrack.id}+RESET}) -> Grace period expired, deleted from channel`);
+      logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} (ID: +BOLD${newTrack.id${RESET}) -> Grace period expired, deleted from channel`);
       const msgsToDelete = [newTrack.id];
       if (noticeMsg && noticeMsg.id) {
         deleteMessageViaBot(noticeMsg.id).catch(() => {});
@@ -1420,7 +1421,7 @@ async function deduplicateEntireLibrary() {
     if (!dup) {
       kept.push(track);
     } else {
-      logCli('DUPLICATE', `+ITALIC}+track.title}+RESET} (ID: +BOLD}+track.id}+RESET}) -> Removed duplicate in favor of ID: +BOLD}+dup.id}+RESET}`);
+      logCli('DUPLICATE', `+ITALIC${track.title${RESET} (ID: +BOLD${track.id${RESET}) -> Removed duplicate in favor of ID: +BOLD${dup.id${RESET}`);
       await deleteTelegramMessage(track.id);
       removed.push({ deleted: track, kept: dup });
 
@@ -1441,10 +1442,10 @@ async function deduplicateEntireLibrary() {
   if (removed.length > 0) {
     trackIndex = kept;
     saveCache();
-    logCli('LIBRARY', `Indexing complete: +BOLD}+trackIndex.length}+RESET} tracks loaded +DIM}• Removed +removed.length} duplicates+RESET}`);
+    logCli('LIBRARY', `Indexing complete: +BOLD${trackIndex.length${RESET} tracks loaded +DIM}• Removed +removed.length} duplicates+RESET}`);
     await flushDigestNotifications();
   } else {
-    logCli('LIBRARY', `Indexing complete: +BOLD}+trackIndex.length}+RESET} tracks loaded +DIM}• Deduplication 100% clean+RESET}`);
+    logCli('LIBRARY', `Indexing complete: +BOLD${trackIndex.length${RESET} tracks loaded +DIM}• Deduplication 100% clean+RESET}`);
   }
 
   await cleanupOrphanedDuplicateNotices().catch(() => {});
@@ -1666,44 +1667,45 @@ app.get('/manifest.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.setHeader('Cache-Control', 'public, max-age=600');
   res.json({
-    id: 'com.personal.telegrammusic',
-    name: 'Telegram Music Addon',
-    version: `+pkg.version} • +trackIndex.length} songs`,
-    description: 'Personal hi-res, lossless, and high-quality music library streamed directly from Telegram',
-    icon: `+base}/icon.png`,
-    canServeLossless: true,
-    canServeDolbyAtmos: true,
-    resources: ['search', 'stream', 'isrc'],
-    types: ['track'],
-    contentType: 'music',
-    settings: [
-      {
-        key: 'quality',
-        type: 'select',
-        default: 'lossless',
-        options: [
-          { label: 'Lossless (FLAC/ALAC)', value: 'lossless' },
-          { label: 'High (320kbps MP3)', value: 'high' },
-          { label: 'Low (Data Saver)', value: 'low' },
-        ],
-      },
-      {
-        key: 'atmos',
-        type: 'select',
-        default: 'auto',
-        options: [
-          { label: 'Dolby Atmos (Spatial Audio)', value: 'auto' },
-          { label: 'Stereo Only', value: 'off' },
-        ],
-      },
-    ],
-    endpoints: {
-      search: `+base}/search?q={query}`,
-      isrc: `+base}/isrc/{isrc}`,
-      stream: `+base}/stream/{id}`,
-      audio: `+base}/audio/{id}`,
+  id: 'com.personal.telegrammusic',
+  name: 'Telegram Music Addon',
+  version: pkg.version + ' • ' + trackIndex.length + ' songs',
+  description: 'Personal hi-res, lossless, and high-quality music library streamed directly from Telegram',
+  icon: base + '/icon.png',
+  canServeLossless: true,
+  canServeDolbyAtmos: true,
+  resources: ['search', 'stream', 'isrc'],
+  types: ['track'],
+  contentType: 'music',
+  settings: [
+    {
+      key: 'quality',
+      type: 'select',
+      default: 'lossless',
+      options: [
+        { label: 'Lossless (FLAC/ALAC)', value: 'lossless' },
+        { label: 'High (320kbps MP3)', value: 'high' },
+        { label: 'Low (Data Saver)', value: 'low' },
+      ],
     },
-  });
+    {
+      key: 'atmos',
+      type: 'select',
+      default: 'auto',
+      options: [
+        { label: 'Dolby Atmos (Spatial Audio)', value: 'auto' },
+        { label: 'Stereo Only', value: 'off' },
+      ],
+    },
+  ],
+  endpoints: {
+    search: base + '/search?q={query}',
+    isrc: base + '/isrc/{isrc}',
+    stream: base + '/stream/{id}',
+    audio: base + '/audio/{id}',
+  },
+});
+
 });
 
 // Deduplication trigger endpoint: triggers on-demand library scan and cleaning
@@ -2082,13 +2084,13 @@ function formatTrackForClient(t, base) {
     sampleRate: t.sampleRate || (isHiRes ? 96000 : 44100),
     audioModes: isAtmos ? ['DOLBY_ATMOS'] : ['STEREO'],
     atmos: isAtmos ? true : undefined,
-    artworkURL: t.hasArtwork ? `+base}/artwork/+t.id}` : undefined,
-    albumArtworkURL: t.hasArtwork ? `+base}/artwork/+t.id}` : undefined,
-    stream: `+base}/stream/+t.id}`,
-    streamURL: `+base}/audio/+t.id}`,
-    streamUrl: `+base}/audio/+t.id}`,
-    audio: `+base}/audio/+t.id}`,
-    audioUrl: `+base}/audio/+t.id}`,
+        artworkURL: t.hasArtwork ? base + '/artwork/' + t.id : undefined,
+    albumArtworkURL: t.hasArtwork ? base + '/artwork/' + t.id : undefined,
+    stream: base + '/stream/' + t.id,
+    streamURL: base + '/audio/' + t.id,
+    streamUrl: base + '/audio/' + t.id,
+    audio: base + '/audio/'+t.id,
+    audioUrl: base + '/audio/'+t.id,
     isrc: t.isrc,
   };
 }
