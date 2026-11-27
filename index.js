@@ -1565,7 +1565,7 @@ function findTrack(id) {
 
 // ── Optional Secret URL Path Protection ────────────────────────────────────
 app.use((req, res, next) => {
-  const currentSecret = getUrlSecret();
+  const currentSecret = '';
 
   // Exempt setup routes, static assets, health monitoring, and icon
   if (
