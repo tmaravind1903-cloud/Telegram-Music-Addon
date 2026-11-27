@@ -759,11 +759,11 @@ async function parseTrackMessage(msg, cacheMedia = true, customTrackId = null, i
     qualityText = `+formatName.toUpperCase()} (+rawKbps || 320}kbps)`;
   }
 
-const keep = Boolean(isReadOnlyChannel)  msgText.toLowerCase().includes('/keep')  msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
+const keep = [Boolean(isReadOnlyChannel),  msgText.toLowerCase().includes('/keep'),  msgText.toLowerCase().includes('/ig'), msgText.toLowerCase().includes('#keep')].some(Boolean);
 
   return {
     id: trackIdStr,
-    isExternal: isReadOnlyChannel || undefined,
+    isExternal: isReadOnlyChannel || true : undefined,
     title: title || fallbackTitle,
     artist: formatArtistForClient(artist || 'Unknown Artist'),
     album: album || undefined,
