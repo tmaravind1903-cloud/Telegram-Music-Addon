@@ -1496,7 +1496,7 @@ async function buildTrackIndex() {
 // Scan read-only EXTRA_CHANNELS
     for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
       const extraTitle = extraEntity.title || extraEntity.username || peerIdStr;
-      logCli('INDEX', Scanning extra channel: +BOLD}+extraTitle}+RESET}...);
+      logCli('INDEX', 'Scanning extra channel:' +BOLD}+extraTitle}+RESET}...);
       let extraCount = 0;
 
       for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
@@ -1533,7 +1533,7 @@ async function buildTrackIndex() {
           saveCache();
         }
       }
-      logCli('INDEX', Finished +BOLD}+extraTitle}+RESET}: +BOLD}+extraCount}+RESET} tracks indexed);
+      logCli('INDEX', 'Finished' +BOLD}+extraTitle}+RESET}: +BOLD}+extraCount}+RESET} tracks indexed);
     }
 
     trackIndex = newIndex;
@@ -2183,7 +2183,7 @@ app.get('/search', async (req, res) => {
       const topStr = topMatch
         ? ` -> ID: +BOLD}+topMatch.id}+RESET}`
         : ` -> +DIM}No match+RESET}`;
-      logCli('SEARCH', `+ITALIC}"+q}"+RESET} +DIM}(+matches.length} hits, +elapsed}ms)+RESET}+topStr}`);
+      logCli('SEARCH', +ITALIC}"+q}"+RESET} +DIM}(+matches.length} hits, +elapsed}ms)+RESET}+topStr}`);
     }
     recordRequest({
       timestamp: new Date().toISOString(),
@@ -2490,12 +2490,12 @@ async function streamAudioTrack(trackId, req, res) {
         const spec = track.isAtmos ? 'Dolby Atmos' : (track.quality || track.format);
         const durPartFormatted = durStr ? ` +DIM}(+durStr})+RESET}` : '';
         const tag = isWebDav ? 'WEBDAV' : (isRange ? 'STREAM' : 'PRECACHE');
-        logCli(tag, `+ITALIC}+track.title}+RESET} • +BOLD}+spec}+RESET} • +BOLD}+sizeMb} MB+RESET}+durPartFormatted} +DIM}-> +statusStr}+RESET}`);
+        logCli(tag, +ITALIC}+track.title}+RESET} • +BOLD}+spec}+RESET} • +BOLD}+sizeMb} MB+RESET}+durPartFormatted} +DIM}-> +statusStr}+RESET}`);
       }
     };
 
     if (isAudition && !isWebDav && process.env.DEBUG_PROBES === 'true') {
-      logCli('PROBE', `+ITALIC}+track.title}+RESET} +DIM}(+Math.round(bytesNeeded / 1024)} KB header read)+RESET}`);
+      logCli('PROBE', +ITALIC}+track.title}+RESET} +DIM}(+Math.round(bytesNeeded / 1024)} KB header read)+RESET}`);
     } else if (isRange && start >= 10 * 1024 * 1024 && bytesNeeded > 128 * 1024) {
       const now = Date.now();
       if ((now - lastSeekLogTime > 2000) || Math.abs(start - lastSeekStart) > 2 * 1024 * 1024) {
@@ -2506,7 +2506,7 @@ async function streamAudioTrack(trackId, req, res) {
         const seekTimeStr = formatTrackDuration(seekSec) || '0:00';
         const percent = Math.round(seekRatio * 100);
         const seekMb = (start / (1024 * 1024)).toFixed(1);
-        logCli('SEEK', `+ITALIC}+track.title}+RESET} • +BOLD}Seeked to ~+seekTimeStr}+RESET} +DIM}(+percent}%) • +seekMb} MB+RESET}`);
+        logCli('SEEK', +ITALIC}+track.title}+RESET} • +BOLD}Seeked to ~+seekTimeStr}+RESET} +DIM}(+percent}%) • +seekMb} MB+RESET});
       }
     }
 
@@ -2623,7 +2623,7 @@ async function streamAudioTrack(trackId, req, res) {
                 ? `+(fullPreamble.length / (1024 * 1024)).toFixed(1)} MB`
                 : `+Math.round(fullPreamble.length / 1024)} KB`;
               if (!isWebDav) {
-                logCli('BUFFER', `Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+trackId}+RESET}`);
+                logCli('BUFFER', Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+trackId}+RESET});
               }
             } else {
               const partial = Buffer.concat(preambleChunks);
@@ -3103,7 +3103,7 @@ async function cleanupOrphanedDuplicateNotices() {
     }
     if (toDelete.size > 0) {
       const deleteIds = Array.from(toDelete);
-      logCli('CLEANUP', `Processing +BOLD}+deleteIds.length}+RESET} duplicate notice/file(s) on server restart`);
+      logCli('CLEANUP', Processing +BOLD}+deleteIds.length}+RESET} duplicate notice/file(s) on server restart);
       for (const id of deleteIds) {
         deleteMessageViaBot(id).catch(() => {});
       }
@@ -3167,7 +3167,7 @@ async function startTelegramService() {
     const currentChannel = cleanEnv(process.env.TELEGRAM_CHANNEL) || env.TELEGRAM_CHANNEL || CHANNEL;
     channelEntity = await resolveChannel(currentChannel);
     if (!channelEntity) {
-      logCli('CHANNEL', `Could not access or find channel: +BOLD}"+currentChannel}"+RESET}. Check permissions or channel ID.`);
+      logCli('CHANNEL', 'Could not access or find channel:' +BOLD}"+currentChannel}"+RESET}. Check permissions or channel ID.);
       return;
     }
 extraChannelEntities.clear();
@@ -3180,9 +3180,9 @@ extraChannelEntities.clear();
           const peerIdStr = utils.getPeerId(extraEnt).toString();
           extraChannelEntities.set(peerIdStr, extraEnt);
           const eTitle = extraEnt.title  extraEnt.username  extraInput;
-          logCli('CHANNEL', Connected extra channel (read-only): +BOLD}+eTitle}+RESET} +DIM}(ID: +extraEnt.id})+RESET});
+          logCli('CHANNEL', 'Connected extra channel (read-only):' +BOLD}+eTitle}+RESET} +DIM}(ID: +extraEnt.id})+RESET});
         } else {
-          logCli('CHANNEL', Could not access extra channel: +BOLD}"+extraInput}"+RESET});
+          logCli('CHANNEL', 'Could not access extra channel:' +BOLD}"+extraInput}"+RESET});
         }
       }
     }
