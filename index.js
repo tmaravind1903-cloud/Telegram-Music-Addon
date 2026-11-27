@@ -256,7 +256,7 @@ function centerText(text, width = 10) {
 
 function getCliTag(tag) {
   const centeredTag = centerText(tag.toUpperCase(), 10);
-  return `${DIM}|${RESET}${BOLD}${centeredTag}${RESET}${DIM}|${RESET}`;
+  return `+DIM}|+RESET}+BOLD}+centeredTag}+RESET}+DIM}|+RESET}`;
 }
 
 function logCli(tag, msg) {
@@ -267,8 +267,8 @@ function logCli(tag, msg) {
   }
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');
-  const timeStr = `${DIM}${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}${RESET}`;
-  console.log(`${timeStr} ${getCliTag(tag)} ${msg}`);
+  const timeStr = `+DIM}+pad(d.getHours())}:+pad(d.getMinutes())}:+pad(d.getSeconds())}+RESET}`;
+  console.log(`+timeStr} +getCliTag(tag)} +msg}`);
   if (upperTag === 'LIBRARY') {
     hasInsertedStartupGap = false;
   }
@@ -331,7 +331,7 @@ function loadCache() {
         indexTrackKeywords(t);
         trackIndex.push(t);
       }
-      logCli('CACHE', `Loaded ${BOLD}${trackIndex.length}${RESET} tracks from ${source}`);
+      logCli('CACHE', `Loaded +BOLD}+trackIndex.length}+RESET} tracks from +source}`);
       updateMediaCacheCapacity();
       rebuildWebDavFileMap();
 
@@ -341,7 +341,7 @@ function loadCache() {
       }
     }
   } catch (err) {
-    console.warn(`Could not load cache: ${err.message}`);
+    console.warn(`Could not load cache: +err.message}`);
   }
 }
 
@@ -360,7 +360,7 @@ function saveCache() {
     fs.writeFileSync(CACHE_FILE_TMP, compressed);
     fs.renameSync(CACHE_FILE_TMP, CACHE_FILE_GZ);
   } catch (err) {
-    console.warn(`Could not save cache: ${err.message}`);
+    console.warn(`Could not save cache: +err.message}`);
   }
 }
 
@@ -375,7 +375,7 @@ function formatTrackDuration(sec) {
   if (!s || s <= 0) return '';
   const m = Math.floor(s / 60);
   const rem = s % 60;
-  return `${m}:${rem.toString().padStart(2, '0')}m`;
+  return `+m}:+rem.toString().padStart(2, '0')}m`;
 }
 
 // Retrieve the Telegram msg.media object from RAM cache, or fetch once if not yet cached
@@ -405,7 +405,7 @@ async function getMediaForTrack(trackId, forceRefresh = false) {
       return targetMsg.media;
     }
   } catch (err) {
-    console.error('Failed to fetch media for track' ${trackId}':', err.message);
+    console.error('Failed to fetch media for track' +trackId+':', err.message);
   }
   return null;
 }
@@ -418,7 +418,7 @@ function extFromName(name) {
 function getFileNameFromMessage(msg) {
   const attrs = msg.media?.document?.attributes || [];
   const fileNameAttr = attrs.find((a) => a instanceof Api.DocumentAttributeFilename || a.fileName);
-  return fileNameAttr ? fileNameAttr.fileName : `file_${msg.id}`;
+  return fileNameAttr ? fileNameAttr.fileName : `file_+msg.id}`;
 }
 
 function getAudioAttr(msg) {
@@ -427,29 +427,29 @@ function getAudioAttr(msg) {
 }
 
 function getBaseUrl(req) {
-  const prefix = req.secretPrefix ? `/${req.secretPrefix}` : '';
+  const prefix = req.secretPrefix ? `/+req.secretPrefix+}` : '';
   const configuredPublic = (process.env.PUBLIC_URL || process.env.CUSTOM_PUBLIC_URL || '').trim().replace(/\/+$/, '');
   if (configuredPublic) {
-    return `${configuredPublic}${prefix}`;
+    return `+configuredPublic}+prefix}`;
   }
 
   const tunnelUrl = typeof tunnel !== 'undefined' && tunnel && typeof tunnel.getTunnelUrl === 'function' ? tunnel.getTunnelUrl() : null;
   const forwardedHost = req.headers['x-forwarded-host'];
-  const reqHost = req.get('host') || `localhost:${PORT}`;
+  const reqHost = req.get('host') || `localhost:+PORT}`;
   const host = forwardedHost || reqHost;
   const isLocalHost = host.startsWith('localhost') || host.startsWith('127.0.0.1') || host.startsWith('0.0.0.0');
 
   if (!isLocalHost) {
     const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-    return `${proto}://${host}${prefix}`;
+    return `+proto}://+host}+prefix}`;
   }
 
   if (tunnelUrl) {
-    return `${tunnelUrl.replace(/\/+$/, '')}${prefix}`;
+    return `+tunnelUrl.replace(/\/+$/, '')}+prefix}`;
   }
 
   const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  return `${proto}://${host}${prefix}`;
+  return `+proto}://+host}+prefix}`;
 }
 
 async function getMediaChunk(media, offset = 0, maxBytes = 128 * 1024) {
@@ -572,9 +572,9 @@ async function prewarmTrackPreamble(trackId, media, title) {
           tagSliceCache.set(idStr, preamble.slice(0, Math.min(preamble.length, 256 * 1024)));
           if (bytesCollected >= FAST_START_BYTES || !iter.left) {
             const sizeFormatted = preamble.length >= 1024 * 1024
-              ? `${(preamble.length / (1024 * 1024)).toFixed(1)} MB`
-              : `${Math.round(preamble.length / 1024)} KB`;
-            logCli('BUFFER', `Prewarmed ${BOLD}${sizeFormatted}${RESET} -> ID: ${BOLD}${idStr}${RESET}`);
+              ? `+(preamble.length / (1024 * 1024)).toFixed(1)} MB`
+              : `+Math.round(preamble.length / 1024)} KB`;
+            logCli('BUFFER', `Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+idStr}+RESET}`);
           }
         }
         iter.left = 0;
@@ -583,7 +583,7 @@ async function prewarmTrackPreamble(trackId, media, title) {
       } catch (err) {
         if (!hasRefreshed && isFileReferenceError(err)) {
           hasRefreshed = true;
-          console.warn(`[FileRef] Pre-warm file reference expired for track ${idStr}. Refreshing...`);
+          console.warn(`[FileRef] Pre-warm file reference expired for track +idStr}. Refreshing...`);
           const freshMedia = await getMediaForTrack(idStr, true);
           if (freshMedia) {
             targetMedia = freshMedia;
@@ -595,7 +595,7 @@ async function prewarmTrackPreamble(trackId, media, title) {
     }
   } catch (err) {
     if (inFlightPrewarmIters.has(idStr)) {
-      console.warn(`[FastStart] Pre-warm skipped for track ${idStr}: ${err.message}`);
+      console.warn(`[FastStart] Pre-warm skipped for track +idStr}: +err.message}`);
     }
   } finally {
     inFlightPrewarmIters.delete(idStr);
@@ -752,11 +752,11 @@ async function parseTrackMessage(msg, cacheMedia = true, customTrackId = null, i
   if (isAtmos) {
     qualityText = 'Dolby Atmos';
   } else if (bitDepth && sampleRate) {
-    qualityText = `${bitDepth}-bit / ${(sampleRate / 1000).toFixed(1)}kHz ${formatName.toUpperCase()}`;
+    qualityText = `+bitDepth}-bit / +(sampleRate / 1000).toFixed(1)}kHz +formatName.toUpperCase()}`;
   } else if (['flac', 'wav', 'alac'].includes(formatName)) {
-    qualityText = `16-bit / 44.1kHz ${formatName.toUpperCase()} Lossless`;
+    qualityText = `16-bit / 44.1kHz +formatName.toUpperCase()} Lossless`;
   } else {
-    qualityText = `${formatName.toUpperCase()} (${rawKbps || 320}kbps)`;
+    qualityText = `+formatName.toUpperCase()} (+rawKbps || 320}kbps)`;
   }
 
 const keep = isReadOnlyChannel  msgText.toLowerCase().includes('/keep')  msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
@@ -817,7 +817,7 @@ function formatBytes(bytes) {
   if (!bytes || bytes <= 0) return '0 B';
   const units = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
+  return `+(bytes / Math.pow(1024, i)).toFixed(1)} +units[i]}`;
 }
 
 function describeTrackQuality(track) {
@@ -826,16 +826,16 @@ function describeTrackQuality(track) {
   }
   const fmt = (track.format || 'mp3').toUpperCase();
   if (track.bitDepth && track.sampleRate) {
-    return `${track.bitDepth}-bit / ${(track.sampleRate / 1000).toFixed(1)}kHz ${fmt}`;
+    return `+track.bitDepth}-bit / +(track.sampleRate / 1000).toFixed(1)}kHz +fmt}`;
   }
   if (['FLAC', 'WAV', 'ALAC'].includes(fmt)) {
-    return `16-bit / 44.1kHz ${fmt} (Lossless)`;
+    return `16-bit / 44.1kHz +fmt} (Lossless)`;
   }
   let kbps = 320;
   if (track.sizeBytes && track.duration) {
     kbps = Math.round((track.sizeBytes * 8) / (track.duration * 1000));
   }
-  return `${fmt} (~${kbps}kbps)`;
+  return `+fmt} (~+kbps}kbps)`;
 }
 
 function normalizeTitle(t) {
@@ -948,7 +948,7 @@ function loadNotificationState() {
       if (data && Array.isArray(data.sentDigests)) notifState.sentDigests = data.sentDigests;
       if (data && typeof data.lastDigestSent === 'number') notifState.lastDigestSent = data.lastDigestSent;
       if (notifState.pending.length > 0 || notifState.sentDigests.length > 0) {
-        logCli('DIGEST', `Restored ${BOLD}${notifState.pending.length}${RESET} pending notifications, ${BOLD}${notifState.sentDigests.length}${RESET} active digest(s)`);
+        logCli('DIGEST', `Restored +BOLD}+notifState.pending.length}+RESET} pending notifications, +BOLD}+notifState.sentDigests.length}+RESET} active digest(s)`);
       }
     }
   } catch (err) {
@@ -970,7 +970,7 @@ function queueDuplicateNotification(item) {
     ...item,
   });
   saveNotificationState();
-  console.log(`[Notification Queue] Queued notification for "${item.title}". Total pending: ${notifState.pending.length}`);
+  console.log(`[Notification Queue] Queued notification for "+item.title}". Total pending: +notifState.pending.length}`);
 }
 
 async function cleanupExpiredDigests() {
@@ -980,7 +980,7 @@ async function cleanupExpiredDigests() {
   let changed = false;
   for (const digest of notifState.sentDigests) {
     if (now - digest.timestamp >= RETENTION_MS) {
-      console.log(`[AutoDelete] Deleting 12h-old digest message ID: ${digest.id}`);
+      console.log(`[AutoDelete] Deleting 12h-old digest message ID: +digest.id}`);
       await deleteTelegramMessage(digest.id);
       changed = true;
     } else {
@@ -1006,7 +1006,7 @@ async function flushDigestNotifications() {
   if (!ENABLE_CHANNEL_NOTIFICATIONS) {
     const cleared = notifState.pending.length;
     if (cleared > 0) {
-      console.log(`[Silent Mode] Cleared ${cleared} duplicate notification(s) without posting to channel.`);
+      console.log(`[Silent Mode] Cleared +cleared} duplicate notification(s) without posting to channel.`);
       notifState.pending = [];
       saveNotificationState();
     }
@@ -1038,17 +1038,17 @@ async function flushDigestNotifications() {
       actionLabel = item.reason === 'lower_quality' ? 'Lower Quality Removed' : 'Identical Duplicate Cleaned';
     }
 
-    text += `• <b>${item.title}</b>: <i>${item.artist}</i>\n`;
-    text += `  ✅ Kept: ${item.keptQuality} [${item.keptSize}]\n`;
-    text += `  ❌ Deleted: ${item.deletedQuality} [${item.deletedSize}]\n`;
-    text += `  <i>Reason: ${actionLabel}</i>\n\n`;
+    text += `• <b>+item.title}</b>: <i>+item.artist}</i>\n`;
+    text += `  ✅ Kept: +item.keptQuality} [+item.keptSize}]\n`;
+    text += `  ❌ Deleted: +item.deletedQuality} [+item.deletedSize}]\n`;
+    text += `  <i>Reason: +actionLabel}</i>\n\n`;
   }
 
   if (remainingCount > 0) {
-    text += `<i>... and ${remainingCount} more track(s) cleaned.</i>\n\n`;
+    text += `<i>... and +remainingCount} more track(s) cleaned.</i>\n\n`;
   }
 
-  text += `📊 <b>Total:</b> ${items.length} duplicate(s) cleaned.\n`;
+  text += `📊 <b>Total:</b> +items.length} duplicate(s) cleaned.\n`;
   text += `⏳ <i>This notification automatically deletes after 12 hours.</i>`;
 
   const now = Date.now();
@@ -1063,7 +1063,7 @@ async function flushDigestNotifications() {
       notifState.pending = [];
       notifState.lastDigestSent = now;
       saveNotificationState();
-      console.log(`[Digest Sent] Sent digest message ID: ${sent.id} with ${items.length} items.`);
+      console.log(`[Digest Sent] Sent digest message ID: +sent.id} with +items.length} items.`);
       return { sent: true, messageId: sent.id, count: items.length };
     }
   } catch (err) {
@@ -1095,7 +1095,7 @@ async function sendChannelMessage(text, options = {}) {
   if (channelEntity) {
     try {
       const rawPeerId = utils.getPeerId(channelEntity).toString();
-      tgChatId = rawPeerId.startsWith('-100') ? rawPeerId : `-100${rawPeerId}`;
+      tgChatId = rawPeerId.startsWith('-100') ? rawPeerId : `-100+rawPeerId}`;
     } catch (_) {}
   }
 
@@ -1113,7 +1113,7 @@ async function sendChannelMessage(text, options = {}) {
         payload.reply_to_message_id = parseInt(options.replyTo, 10);
       }
 
-      let res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      let res = await fetch(`https://api.telegram.org/bot+token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -1123,7 +1123,7 @@ async function sendChannelMessage(text, options = {}) {
       if (!data.ok && payload.reply_to_message_id) {
         // Broadcast channel or chat may reject reply_to_message_id; retry without it
         delete payload.reply_to_message_id;
-        res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        res = await fetch(`https://api.telegram.org/bot+token}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -1193,7 +1193,7 @@ function cancelPendingDeletion(messageId) {
       deleteMessageViaBot(pending.noticeMsgId).catch(() => {});
       deleteTelegramMessages([pending.noticeMsgId]).catch(() => {});
     }
-    console.log(`[Keep Flag] Cancelled pending deletion for message ID: ${key}`);
+    console.log(`[Keep Flag] Cancelled pending deletion for message ID: +key}`);
     return pending;
   }
   return null;
@@ -1205,23 +1205,23 @@ async function deleteMessageViaBot(msgId) {
   if (channelEntity) {
     try {
       const rawPeerId = utils.getPeerId(channelEntity).toString();
-      tgChatId = rawPeerId.startsWith('-100') ? rawPeerId : `-100${rawPeerId}`;
+      tgChatId = rawPeerId.startsWith('-100') ? rawPeerId : `-100+rawPeerId}`;
     } catch (_) {}
   }
   if (token && tgChatId && msgId) {
     try {
-      const res = await fetch(`https://api.telegram.org/bot${token}/deleteMessage`, {
+      const res = await fetch(`https://api.telegram.org/bot+token}/deleteMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: tgChatId, message_id: parseInt(msgId, 10) }),
       });
       const data = await res.json();
       if (!data.ok) {
-        console.warn(`[Bot Delete Warning] Message ${msgId}: ${data.description || 'Bad Request'}`);
+        console.warn(`[Bot Delete Warning] Message +msgId}: +data.description || 'Bad Request'}`);
       }
       return Boolean(data.ok && data.result);
     } catch (err) {
-      console.warn(`[Bot Delete Error] Message ${msgId}:`, err.message);
+      console.warn(`[Bot Delete Error] Message +msgId}:`, err.message);
     }
   }
   return false;
@@ -1237,16 +1237,16 @@ async function deleteTelegramMessages(messageIds) {
     if (ids.length === 0) return false;
 
     await client.deleteMessages(channelEntity, ids, { revoke: true });
-    console.log(`[Deleted Telegram Messages] IDs: ${ids.join(', ')}`);
+    console.log(`[Deleted Telegram Messages] IDs: +ids.join(', ')}`);
     return true;
   } catch (err) {
-    console.warn(`[Delete Messages Error] IDs ${JSON.stringify(messageIds)}:`, err.message);
+    console.warn(`[Delete Messages Error] IDs +JSON.stringify(messageIds)}:`, err.message);
     // Fallback: try deleting individually with bot deleteMessage secondary fallback
     for (const rawId of messageIds) {
       const singleId = typeof rawId === 'number' ? rawId : parseInt(rawId, 10);
       if (singleId && !isNaN(singleId) && singleId > 0) {
         await client.deleteMessages(channelEntity, [singleId], { revoke: true }).catch(async (e) => {
-          console.warn(`[Delete Message Fallback Error] ID ${singleId}:`, e.message);
+          console.warn(`[Delete Message Fallback Error] ID +singleId}:`, e.message);
           await deleteMessageViaBot(singleId);
         });
       }
@@ -1266,7 +1266,7 @@ function flushUploadBatch() {
   if (uploadBatch.length === 0) return;
   for (const t of uploadBatch) {
     const spec = t.isAtmos ? 'Dolby Atmos' : (t.quality || describeTrackQuality(t) || t.format);
-    logCli('INDEX', `${ITALIC}${t.title}${RESET} • ${BOLD}${t.artist}${RESET} • ${BOLD}${spec}${RESET}`);
+    logCli('INDEX', `+ITALIC}+t.title}+RESET} • +BOLD}+t.artist}+RESET} • +BOLD}+spec}+RESET}`);
   }
   uploadBatch = [];
   uploadBatchTimer = null;
@@ -1290,7 +1290,7 @@ async function processTrackUpload(newTrack) {
   if (newTrack.keep) {
     trackIndex.unshift(newTrack);
     saveCache();
-    console.log(`[Keep Flag] Track "${newTrack.title}" marked with /keep. Preserving without deduplication.`);
+    console.log(`[Keep Flag] Track "+newTrack.title}" marked with /keep. Preserving without deduplication.`);
     return newTrack;
   }
 
@@ -1307,7 +1307,7 @@ async function processTrackUpload(newTrack) {
 
   if (scoreNew > scoreOld) {
     // Incoming track is HIGHER quality (e.g. 24/192 replacing 16/44.1, or FLAC replacing MP3)
-    logCli('DUPLICATE', `${ITALIC}${newTrack.title}${RESET} -> Upgraded from ${describeTrackQuality(existingDup)} to ${BOLD}${describeTrackQuality(newTrack)}${RESET} (Replacing ID: ${existingDup.id})`);
+    logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} -> Upgraded from +describeTrackQuality(existingDup)} to +BOLD}+describeTrackQuality(newTrack)}+RESET} (Replacing ID: +existingDup.id})`);
 
     await deleteTelegramMessage(existingDup.id);
 
@@ -1334,8 +1334,8 @@ async function processTrackUpload(newTrack) {
     const isLower = scoreNew < scoreOld;
     const reason = isLower ? 'lower_quality' : 'identical';
     const graceHours = Math.round(DUPLICATE_GRACE_PERIOD_MS / (60 * 60 * 1000));
-    const graceText = graceHours >= 1 ? `${graceHours} hours` : `${Math.round(DUPLICATE_GRACE_PERIOD_MS / 1000)}s`;
-    logCli('DUPLICATE', `${ITALIC}${newTrack.title}${RESET} (ID: ${BOLD}${newTrack.id}${RESET}) -> ${reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy'} (Deleting in ${graceText}, send /keep to save)`);
+    const graceText = graceHours >= 1 ? `+graceHours} hours` : `+Math.round(DUPLICATE_GRACE_PERIOD_MS / 1000)}s`;
+    logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} (ID: +BOLD}+newTrack.id}+RESET}) -> +reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy'} (Deleting in +graceText}, send /keep to save)`);
 
     pendingDeletions.set(String(newTrack.id), {
       timer: null,
@@ -1348,8 +1348,8 @@ async function processTrackUpload(newTrack) {
     let noticeMsg = null;
     if (channelEntity) {
       const noticeText = isLower
-        ? `<b>Duplicate detected:</b> Lower quality (${describeTrackQuality(newTrack)}) than existing copy (${describeTrackQuality(existingDup)}). Deleting in ${graceText}... (Send <code>/keep</code> to save)`
-        : `<b>Duplicate detected:</b> Identical copy already in library. Deleting in ${graceText}... (Send <code>/keep</code> to save)`;
+        ? `<b>Duplicate detected:</b> Lower quality (+describeTrackQuality(newTrack)}) than existing copy (+describeTrackQuality(existingDup)}). Deleting in +graceText}... (Send <code>/keep</code> to save)`
+        : `<b>Duplicate detected:</b> Identical copy already in library. Deleting in +graceText}... (Send <code>/keep</code> to save)`;
 
       noticeMsg = await sendChannelMessage(noticeText, {
         parseMode: 'html',
@@ -1359,7 +1359,7 @@ async function processTrackUpload(newTrack) {
 
     const timer = setTimeout(async () => {
       pendingDeletions.delete(String(newTrack.id));
-      logCli('DUPLICATE', `${ITALIC}${newTrack.title}${RESET} (ID: ${BOLD}${newTrack.id}${RESET}) -> Grace period expired, deleted from channel`);
+      logCli('DUPLICATE', `+ITALIC}+newTrack.title}+RESET} (ID: +BOLD}+newTrack.id}+RESET}) -> Grace period expired, deleted from channel`);
       const msgsToDelete = [newTrack.id];
       if (noticeMsg && noticeMsg.id) {
         deleteMessageViaBot(noticeMsg.id).catch(() => {});
@@ -1418,7 +1418,7 @@ async function deduplicateEntireLibrary() {
     if (!dup) {
       kept.push(track);
     } else {
-      logCli('DUPLICATE', `${ITALIC}${track.title}${RESET} (ID: ${BOLD}${track.id}${RESET}) -> Removed duplicate in favor of ID: ${BOLD}${dup.id}${RESET}`);
+      logCli('DUPLICATE', `+ITALIC}+track.title}+RESET} (ID: +BOLD}+track.id}+RESET}) -> Removed duplicate in favor of ID: +BOLD}+dup.id}+RESET}`);
       await deleteTelegramMessage(track.id);
       removed.push({ deleted: track, kept: dup });
 
@@ -1439,10 +1439,10 @@ async function deduplicateEntireLibrary() {
   if (removed.length > 0) {
     trackIndex = kept;
     saveCache();
-    logCli('LIBRARY', `Indexing complete: ${BOLD}${trackIndex.length}${RESET} tracks loaded ${DIM}• Removed ${removed.length} duplicates${RESET}`);
+    logCli('LIBRARY', `Indexing complete: +BOLD}+trackIndex.length}+RESET} tracks loaded +DIM}• Removed +removed.length} duplicates+RESET}`);
     await flushDigestNotifications();
   } else {
-    logCli('LIBRARY', `Indexing complete: ${BOLD}${trackIndex.length}${RESET} tracks loaded ${DIM}• Deduplication 100% clean${RESET}`);
+    logCli('LIBRARY', `Indexing complete: +BOLD}+trackIndex.length}+RESET} tracks loaded +DIM}• Deduplication 100% clean+RESET}`);
   }
 
   await cleanupOrphanedDuplicateNotices().catch(() => {});
@@ -1496,11 +1496,11 @@ async function buildTrackIndex() {
 // Scan read-only EXTRA_CHANNELS
     for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
       const extraTitle = extraEntity.title  extraEntity.username  peerIdStr;
-      logCli('INDEX', Scanning extra channel: ${BOLD}${extraTitle}${RESET}...);
+      logCli('INDEX', Scanning extra channel: +BOLD}+extraTitle}+RESET}...);
       let extraCount = 0;
 
       for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
-        const compoundId = ${peerIdStr}'_'${msg.id};
+        const compoundId = +peerIdStr}'_'+msg.id};
         if (seenIds.has(compoundId)) continue;
         seenIds.add(compoundId);
 
@@ -1533,7 +1533,7 @@ async function buildTrackIndex() {
           saveCache();
         }
       }
-      logCli('INDEX', Finished ${BOLD}${extraTitle}${RESET}: ${BOLD}${extraCount}${RESET} tracks indexed);
+      logCli('INDEX', Finished +BOLD}+extraTitle}+RESET}: +BOLD}+extraCount}+RESET} tracks indexed);
     }
 
     trackIndex = newIndex;
@@ -1574,12 +1574,12 @@ app.use((req, res, next) => {
     return next();
   }
 
-  const prefix = `/${currentSecret}`;
-  const encodedPrefix = `/${encodeURIComponent(currentSecret)}`;
+  const prefix = `/+currentSecret}`;
+  const encodedPrefix = `/+encodeURIComponent(currentSecret)}`;
   const matchedPrefix =
-    req.url === prefix || req.url.startsWith(`${prefix}/`) || req.url.startsWith(`${prefix}?`)
+    req.url === prefix || req.url.startsWith(`+prefix}/`) || req.url.startsWith(`+prefix}?`)
       ? prefix
-      : req.url === encodedPrefix || req.url.startsWith(`${encodedPrefix}/`) || req.url.startsWith(`${encodedPrefix}?`)
+      : req.url === encodedPrefix || req.url.startsWith(`+encodedPrefix}/`) || req.url.startsWith(`+encodedPrefix}?`)
       ? encodedPrefix
       : null;
 
@@ -1598,7 +1598,7 @@ app.use((req, res, next) => {
   if (
     req.query.secret === currentSecret ||
     req.headers['x-secret-token'] === currentSecret ||
-    req.headers.authorization === `Bearer ${currentSecret}`
+    req.headers.authorization === `Bearer +currentSecret}`
   ) {
     req.secretPrefix = currentSecret;
     return next();
@@ -1622,7 +1622,7 @@ app.use((req, res, next) => {
     return res.status(401).send('Unauthorized: WebDAV requires authentication');
   }
 
-  console.warn(`[Security] Blocked unauthorized request to ${req.originalUrl || req.url} from ${req.ip}`);
+  console.warn(`[Security] Blocked unauthorized request to +req.originalUrl || req.url} from +req.ip}`);
   return res.status(401).json({
     error: 'Unauthorized: invalid or missing secret path',
     message: 'This Telegram Music Addon instance requires a valid secret URL prefix (e.g. /:secret/manifest.json)',
@@ -1666,9 +1666,9 @@ app.get('/manifest.json', (req, res) => {
   res.json({
     id: 'com.personal.telegrammusic',
     name: 'Telegram Music Addon',
-    version: `${pkg.version} • ${trackIndex.length} songs`,
+    version: `+pkg.version} • +trackIndex.length} songs`,
     description: 'Personal hi-res, lossless, and high-quality music library streamed directly from Telegram',
-    icon: `${base}/icon.png`,
+    icon: `+base}/icon.png`,
     canServeLossless: true,
     canServeDolbyAtmos: true,
     resources: ['search', 'stream', 'isrc'],
@@ -1696,10 +1696,10 @@ app.get('/manifest.json', (req, res) => {
       },
     ],
     endpoints: {
-      search: `${base}/search?q={query}`,
-      isrc: `${base}/isrc/{isrc}`,
-      stream: `${base}/stream/{id}`,
-      audio: `${base}/audio/{id}`,
+      search: `+base}/search?q={query}`,
+      isrc: `+base}/isrc/{isrc}`,
+      stream: `+base}/stream/{id}`,
+      audio: `+base}/audio/{id}`,
     },
   });
 });
@@ -1785,7 +1785,7 @@ app.all('/clean-lossy', async (req, res) => {
 
     const idsToDelete = targets.map((t) => t.id);
     if (idsToDelete.length > 0) {
-      console.log(`[Clean Lossy] Deleting ${idsToDelete.length} lossy tracks from Telegram channel...`);
+      console.log(`[Clean Lossy] Deleting +idsToDelete.length} lossy tracks from Telegram channel...`);
       // Delete in batches of 50 to respect Telegram bulk deletion limits
       for (let i = 0; i < idsToDelete.length; i += 50) {
         const batch = idsToDelete.slice(i, i + 50);
@@ -1800,7 +1800,7 @@ app.all('/clean-lossy', async (req, res) => {
       }
       saveCache();
       updateMediaCacheCapacity();
-      console.log(`[Clean Lossy] Successfully deleted ${idsToDelete.length} lossy tracks.`);
+      console.log(`[Clean Lossy] Successfully deleted +idsToDelete.length} lossy tracks.`);
     }
 
     res.json({
@@ -1857,7 +1857,7 @@ function indexTrackKeywords(t) {
   Object.defineProperty(t, '_searchWords', { value: words, enumerable: false, writable: true, configurable: true });
   Object.defineProperty(t, '_searchWordsArray', { value: rawWordsList, enumerable: false, writable: true, configurable: true });
   Object.defineProperty(t, '_searchFullText', {
-    value: `${(t.title || '').toLowerCase()} ${(t.artist || '').toLowerCase()} ${(t.album || '').toLowerCase()}`,
+    value: `+(t.title || '').toLowerCase()} +(t.artist || '').toLowerCase()} +(t.album || '').toLowerCase()}`,
     enumerable: false,
     writable: true,
     configurable: true,
@@ -2022,7 +2022,7 @@ function scoreTrackMatch(track, qContext) {
     if (ratio >= 0.6) {
       baseScore = Math.round(ratio * 120);
     } else if (qClean.length >= 5) {
-      const fullText = `${trackTitle} ${trackArtist} ${trackAlbum}`;
+      const fullText = `+trackTitle} +trackArtist} +trackAlbum}`;
       if (fullText.includes(qClean)) baseScore = 60;
     }
   }
@@ -2050,7 +2050,7 @@ async function onTrackForwarded(msg) {
       if (processed && processed.discarded) {
         return processed;
       }
-      console.log(`[AutoIndex] Successfully indexed newly uploaded track: "${track.title}" (ID: ${track.id})`);
+      console.log(`[AutoIndex] Successfully indexed newly uploaded track: "+track.title}" (ID: +track.id})`);
       return { indexed: true, track: processed };
     }
   } catch (err) {
@@ -2080,13 +2080,13 @@ function formatTrackForClient(t, base) {
     sampleRate: t.sampleRate || (isHiRes ? 96000 : 44100),
     audioModes: isAtmos ? ['DOLBY_ATMOS'] : ['STEREO'],
     atmos: isAtmos ? true : undefined,
-    artworkURL: t.hasArtwork ? `${base}/artwork/${t.id}` : undefined,
-    albumArtworkURL: t.hasArtwork ? `${base}/artwork/${t.id}` : undefined,
-    stream: `${base}/stream/${t.id}`,
-    streamURL: `${base}/audio/${t.id}`,
-    streamUrl: `${base}/audio/${t.id}`,
-    audio: `${base}/audio/${t.id}`,
-    audioUrl: `${base}/audio/${t.id}`,
+    artworkURL: t.hasArtwork ? `+base}/artwork/+t.id}` : undefined,
+    albumArtworkURL: t.hasArtwork ? `+base}/artwork/+t.id}` : undefined,
+    stream: `+base}/stream/+t.id}`,
+    streamURL: `+base}/audio/+t.id}`,
+    streamUrl: `+base}/audio/+t.id}`,
+    audio: `+base}/audio/+t.id}`,
+    audioUrl: `+base}/audio/+t.id}`,
     isrc: t.isrc,
   };
 }
@@ -2103,7 +2103,7 @@ app.get('/search', async (req, res) => {
       const queryCore = extractCoreTitle(q);
       const queryTokens = q.replace(/[^\p{L}\p{N}\s]/gu, ' ').split(/\s+/).filter((w) => w.length > 0);
       const escapedCore = q.replace(/[^\p{L}\p{N}]/gu, '');
-      const wordRegex = escapedCore ? new RegExp(`\\b${escapedCore}\\b`, 'i') : null;
+      const wordRegex = escapedCore ? new RegExp(`\\b+escapedCore}\\b`, 'i') : null;
       const targetDuration = parseInt(req.query.duration || req.query.d, 10) || null;
       const qContext = { qClean: q, queryCore, queryTokens, wordRegex, targetDuration };
 
@@ -2181,9 +2181,9 @@ app.get('/search', async (req, res) => {
     if (q) {
       const topMatch = matches[0];
       const topStr = topMatch
-        ? ` -> ID: ${BOLD}${topMatch.id}${RESET}`
-        : ` -> ${DIM}No match${RESET}`;
-      logCli('SEARCH', `${ITALIC}"${q}"${RESET} ${DIM}(${matches.length} hits, ${elapsed}ms)${RESET}${topStr}`);
+        ? ` -> ID: +BOLD}+topMatch.id}+RESET}`
+        : ` -> +DIM}No match+RESET}`;
+      logCli('SEARCH', `+ITALIC}"+q}"+RESET} +DIM}(+matches.length} hits, +elapsed}ms)+RESET}+topStr}`);
     }
     recordRequest({
       timestamp: new Date().toISOString(),
@@ -2192,7 +2192,7 @@ app.get('/search', async (req, res) => {
       tier: req.query.quality || 'NONE',
       atmos: prefersAtmos,
       resultsCount: matches.length,
-      topResult: matches[0] ? `${matches[0].title} - ${matches[0].artist} (${matches[0].duration}s)` : null,
+      topResult: matches[0] ? `+matches[0].title} - +matches[0].artist} (+matches[0].duration}s)` : null,
       elapsedMs: elapsed,
     });
 
@@ -2224,15 +2224,15 @@ function handleIsrcLookup(req, res) {
     (t) => t.isrc && String(t.isrc).trim().toUpperCase() === cleanCode
   );
 
-  const topStr = matches[0] ? ` -> Matched: "${matches[0].title}" (ID: ${matches[0].id})` : ' -> No match';
-  console.log(`[ISRC] "${cleanCode}" (${matches.length} found)${topStr}`);
+  const topStr = matches[0] ? ` -> Matched: "+matches[0].title}" (ID: +matches[0].id})` : ' -> No match';
+  console.log(`[ISRC] "+cleanCode}" (+matches.length} found)+topStr}`);
 
   recordRequest({
     timestamp: new Date().toISOString(),
     type: 'isrc',
     query: cleanCode,
     resultsCount: matches.length,
-    topResult: matches[0] ? `${matches[0].title} - ${matches[0].artist}` : null,
+    topResult: matches[0] ? `+matches[0].title} - +matches[0].artist}` : null,
   });
 
   if (req.path.includes('resolve-isrc')) {
@@ -2273,7 +2273,7 @@ app.get('/stream/:id', (req, res) => {
     timestamp: new Date().toISOString(),
     type: 'stream',
     id: req.params.id,
-    track: track ? `${track.title} - ${track.artist}` : 'NOT_FOUND',
+    track: track ? `+track.title} - +track.artist}` : 'NOT_FOUND',
     quality: track ? track.quality : 'UNKNOWN',
     tier: req.query.quality || 'NONE',
     atmos: isAtmos,
@@ -2287,7 +2287,7 @@ app.get('/stream/:id', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=300');
 
   res.json({
-    url: `${base}/audio/${req.params.id}`,
+    url: `+base}/audio/+req.params.id}`,
     format: isAtmos ? 'eac3-joc' : (track.format || 'flac'),
     codec: isAtmos ? 'eac3-joc' : (track.format || 'flac'),
     container: isAtmos ? 'mp4' : (track.format || 'flac'),
@@ -2322,7 +2322,7 @@ app.get('/artwork/:id', async (req, res) => {
       const jpg = utils.strippedPhotoToJpg(stripped.bytes);
       res.setHeader('Content-Type', 'image/jpeg');
       res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
-      res.setHeader('ETag', `"${track.id}-art"`);
+      res.setHeader('ETag', `"+track.id}-art"`);
       return res.send(jpg);
     }
 
@@ -2347,7 +2347,7 @@ app.get('/artwork/:id', async (req, res) => {
 
     res.setHeader('Content-Type', 'image/jpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
-    res.setHeader('ETag', `"${track.id}-art"`);
+    res.setHeader('ETag', `"+track.id}-art"`);
     res.send(thumbBuf);
   } catch (err) {
     console.error('Artwork fetch error:', err.message);
@@ -2391,7 +2391,7 @@ async function streamAudioTrack(trackId, req, res) {
 
     const totalSize = Number(track.sizeBytes) || Number(media.document?.size) || 0;
     if (!totalSize || isNaN(totalSize)) {
-      console.error(`Invalid totalSize for track ${trackId}`);
+      console.error(`Invalid totalSize for track +trackId}`);
       return res.status(500).send('Unable to determine audio file size');
     }
     if (!track.sizeBytes) {
@@ -2420,7 +2420,7 @@ async function streamAudioTrack(trackId, req, res) {
     }
 
     if (isRange && (start >= totalSize || start > end)) {
-      res.setHeader('Content-Range', `bytes */${totalSize}`);
+      res.setHeader('Content-Range', `bytes */+totalSize}`);
       return res.status(416).end();
     }
 
@@ -2436,7 +2436,7 @@ async function streamAudioTrack(trackId, req, res) {
     );
 
     // Fast cache validation
-    if (!isRange && req.headers['if-none-match'] === `"${track.id}-${totalSize}"`) {
+    if (!isRange && req.headers['if-none-match'] === `"+track.id}-+totalSize}"`) {
       return res.status(304).end();
     }
 
@@ -2453,9 +2453,9 @@ async function streamAudioTrack(trackId, req, res) {
           res.setHeader('Keep-Alive', 'timeout=30, max=100');
           res.setHeader('Content-Length', bytesNeeded);
           if (isRange) {
-            res.setHeader('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+            res.setHeader('Content-Range', `bytes +start}-+end}/+totalSize}`);
           }
-          res.setHeader('ETag', `"${track.id}-${totalSize}"`);
+          res.setHeader('ETag', `"+track.id}-+totalSize}"`);
           res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
           if (req.method === 'HEAD') return res.end();
           return res.send(cachedTagBuf.slice(start, start + bytesNeeded));
@@ -2467,7 +2467,7 @@ async function streamAudioTrack(trackId, req, res) {
     const isPlaybackStart = (start === 0 && bytesNeeded >= 64 * 1024);
 
     const durStr = formatTrackDuration(track.duration);
-    const durPart = durStr ? `${durStr}, ` : '';
+    const durPart = durStr ? `+durStr}, ` : '';
 
     const statusStr = isRange ? '206 Partial' : '200 OK';
 
@@ -2488,14 +2488,14 @@ async function streamAudioTrack(trackId, req, res) {
         lastSeekStart = 0;
         const sizeMb = (totalSize / (1024 * 1024)).toFixed(1);
         const spec = track.isAtmos ? 'Dolby Atmos' : (track.quality || track.format);
-        const durPartFormatted = durStr ? ` ${DIM}(${durStr})${RESET}` : '';
+        const durPartFormatted = durStr ? ` +DIM}(+durStr})+RESET}` : '';
         const tag = isWebDav ? 'WEBDAV' : (isRange ? 'STREAM' : 'PRECACHE');
-        logCli(tag, `${ITALIC}${track.title}${RESET} • ${BOLD}${spec}${RESET} • ${BOLD}${sizeMb} MB${RESET}${durPartFormatted} ${DIM}-> ${statusStr}${RESET}`);
+        logCli(tag, `+ITALIC}+track.title}+RESET} • +BOLD}+spec}+RESET} • +BOLD}+sizeMb} MB+RESET}+durPartFormatted} +DIM}-> +statusStr}+RESET}`);
       }
     };
 
     if (isAudition && !isWebDav && process.env.DEBUG_PROBES === 'true') {
-      logCli('PROBE', `${ITALIC}${track.title}${RESET} ${DIM}(${Math.round(bytesNeeded / 1024)} KB header read)${RESET}`);
+      logCli('PROBE', `+ITALIC}+track.title}+RESET} +DIM}(+Math.round(bytesNeeded / 1024)} KB header read)+RESET}`);
     } else if (isRange && start >= 10 * 1024 * 1024 && bytesNeeded > 128 * 1024) {
       const now = Date.now();
       if ((now - lastSeekLogTime > 2000) || Math.abs(start - lastSeekStart) > 2 * 1024 * 1024) {
@@ -2506,7 +2506,7 @@ async function streamAudioTrack(trackId, req, res) {
         const seekTimeStr = formatTrackDuration(seekSec) || '0:00';
         const percent = Math.round(seekRatio * 100);
         const seekMb = (start / (1024 * 1024)).toFixed(1);
-        logCli('SEEK', `${ITALIC}${track.title}${RESET} • ${BOLD}Seeked to ~${seekTimeStr}${RESET} ${DIM}(${percent}%) • ${seekMb} MB${RESET}`);
+        logCli('SEEK', `+ITALIC}+track.title}+RESET} • +BOLD}Seeked to ~+seekTimeStr}+RESET} +DIM}(+percent}%) • +seekMb} MB+RESET}`);
       }
     }
 
@@ -2515,9 +2515,9 @@ async function streamAudioTrack(trackId, req, res) {
       type: 'audio',
       id: trackId,
       range: range || 'none',
-      bytes: `${start}-${end}/${totalSize}`,
+      bytes: `+start}-+end}/+totalSize}`,
       bytesNeeded,
-      track: `${track.title} - ${track.artist}`,
+      track: `+track.title} - +track.artist}`,
     });
 
     res.status(isRange ? 206 : 200);
@@ -2527,9 +2527,9 @@ async function streamAudioTrack(trackId, req, res) {
     res.setHeader('Keep-Alive', 'timeout=30, max=100');
     res.setHeader('Content-Length', bytesNeeded);
     if (isRange) {
-      res.setHeader('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+      res.setHeader('Content-Range', `bytes +start}-+end}/+totalSize}`);
     }
-    res.setHeader('ETag', `"${track.id}-${totalSize}"`);
+    res.setHeader('ETag', `"+track.id}-+totalSize}"`);
     res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
 
     if (req.method === 'HEAD') {
@@ -2620,10 +2620,10 @@ async function streamAudioTrack(trackId, req, res) {
               fastStartCache.set(trackId, fullPreamble);
               tagSliceCache.set(trackId, fullPreamble.slice(0, Math.min(fullPreamble.length, 256 * 1024)));
               const sizeFormatted = fullPreamble.length >= 1024 * 1024
-                ? `${(fullPreamble.length / (1024 * 1024)).toFixed(1)} MB`
-                : `${Math.round(fullPreamble.length / 1024)} KB`;
+                ? `+(fullPreamble.length / (1024 * 1024)).toFixed(1)} MB`
+                : `+Math.round(fullPreamble.length / 1024)} KB`;
               if (!isWebDav) {
-                logCli('BUFFER', `Prewarmed ${BOLD}${sizeFormatted}${RESET} -> ID: ${BOLD}${trackId}${RESET}`);
+                logCli('BUFFER', `Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+trackId}+RESET}`);
               }
             } else {
               const partial = Buffer.concat(preambleChunks);
@@ -2672,11 +2672,11 @@ async function streamAudioTrack(trackId, req, res) {
       } catch (iterErr) {
         if (!hasRefreshedRef && isFileReferenceError(iterErr)) {
           hasRefreshedRef = true;
-          console.warn(`[FileRef] File reference expired for "${track.title}" (ID: ${trackId}). Refreshing from Telegram cloud...`);
+          console.warn(`[FileRef] File reference expired for "+track.title}" (ID: +trackId}). Refreshing from Telegram cloud...`);
           const freshMedia = await getMediaForTrack(trackId, true);
           if (freshMedia) {
             currentMedia = freshMedia;
-            console.log(`[FileRef] Refreshed file reference for "${track.title}" (ID: ${trackId}). Resuming stream from byte ${start + bytesSent}...`);
+            console.log(`[FileRef] Refreshed file reference for "+track.title}" (ID: +trackId}). Resuming stream from byte +start + bytesSent}...`);
             continue;
           }
         }
@@ -2689,7 +2689,7 @@ async function streamAudioTrack(trackId, req, res) {
     }
   } catch (err) {
     if (!isConnectionClosed && !res.destroyed) {
-      console.error(`Audio stream error for track ${trackId}:`, err.message);
+      console.error(`Audio stream error for track +trackId}:`, err.message);
       if (!res.headersSent) res.status(500).send(err.message);
       else res.end();
     }
@@ -2723,7 +2723,7 @@ function getTrackWebDavFileName(track) {
   const ext = track.format === 'flac' ? 'flac' : (track.format === 'alac' ? 'm4a' : (track.isAtmos || track.format === 'eac3-joc' ? 'm4a' : (track.format || 'flac')));
   const artist = sanitizeWebDavName(track.artist || 'Unknown Artist');
   const title = sanitizeWebDavName(track.title || 'Untitled');
-  return `${artist} - ${title}.${ext}`;
+  return `+artist} - +title}.+ext}`;
 }
 
 function rebuildWebDavFileMap() {
@@ -2734,14 +2734,14 @@ function rebuildWebDavFileMap() {
     const artist = sanitizeWebDavName(track.artist || 'Unknown Artist');
     const title = sanitizeWebDavName(track.title || 'Untitled');
     const album = getTrackWebDavAlbum(track);
-    const baseClean = `${artist} - ${title}`;
-    const baseKey = `${album.toLowerCase()}:::${baseClean.toLowerCase()}`;
+    const baseClean = `+artist} - +title}`;
+    const baseKey = `+album.toLowerCase()}:::+baseClean.toLowerCase()}`;
 
-    let finalName = `${baseClean}.${ext}`;
+    let finalName = `+baseClean}.+ext}`;
     if (seenCount.has(baseKey)) {
       const count = seenCount.get(baseKey) + 1;
       seenCount.set(baseKey, count);
-      finalName = `${baseClean} (${count}).${ext}`;
+      finalName = `+baseClean} (+count}).+ext}`;
     } else {
       seenCount.set(baseKey, 1);
     }
@@ -2749,9 +2749,9 @@ function rebuildWebDavFileMap() {
     track._webDavFileName = finalName;
     track._webDavAlbum = album;
 
-    const fullPathKey = `${album.toLowerCase()}/${finalName.toLowerCase()}`;
+    const fullPathKey = `+album.toLowerCase()}/+finalName.toLowerCase()}`;
     webDavFileMap.set(fullPathKey, track.id);
-    webDavFileMap.set(`${encodeURIComponent(album).toLowerCase()}/${encodeURIComponent(finalName).toLowerCase()}`, track.id);
+    webDavFileMap.set(`+encodeURIComponent(album).toLowerCase()}/+encodeURIComponent(finalName).toLowerCase()}`, track.id);
 
     webDavFileMap.set(finalName.toLowerCase(), track.id);
     webDavFileMap.set(encodeURIComponent(finalName).toLowerCase(), track.id);
@@ -2768,7 +2768,7 @@ function getTrackIdFromWebDavPath(urlPath) {
   if (segments.length >= 2) {
     const albumFolder = segments[segments.length - 2].trim().toLowerCase();
     const fileName = segments[segments.length - 1].trim().toLowerCase();
-    const combinedKey = `${albumFolder}/${fileName}`;
+    const combinedKey = `+albumFolder}/+fileName}`;
     if (webDavFileMap.has(combinedKey)) {
       return webDavFileMap.get(combinedKey);
     }
@@ -2799,12 +2799,12 @@ function escapeXml(str) {
 
 function buildWebDavCollectionXml(href, displayName, lastMod = new Date().toUTCString()) {
   let xml = `  <D:response>\n`;
-  xml += `    <D:href>${href}</D:href>\n`;
+  xml += `    <D:href>+href}</D:href>\n`;
   xml += `    <D:propstat>\n`;
   xml += `      <D:prop>\n`;
   xml += `        <D:resourcetype><D:collection/></D:resourcetype>\n`;
-  xml += `        <D:displayname>${escapeXml(displayName)}</D:displayname>\n`;
-  xml += `        <D:getlastmodified>${lastMod}</D:getlastmodified>\n`;
+  xml += `        <D:displayname>+escapeXml(displayName)}</D:displayname>\n`;
+  xml += `        <D:getlastmodified>+lastMod}</D:getlastmodified>\n`;
   xml += `      </D:prop>\n`;
   xml += `      <D:status>HTTP/1.1 200 OK</D:status>\n`;
   xml += `    </D:propstat>\n`;
@@ -2816,14 +2816,14 @@ function buildWebDavFileXml(href, fileName, track) {
   const sizeBytes = track.sizeBytes || 0;
   const mimeType = track.isAtmos ? 'audio/mp4' : (track.mimeType || (track.format === 'flac' ? 'audio/flac' : 'application/octet-stream'));
   let xml = `  <D:response>\n`;
-  xml += `    <D:href>${href}</D:href>\n`;
+  xml += `    <D:href>+href}</D:href>\n`;
   xml += `    <D:propstat>\n`;
   xml += `      <D:prop>\n`;
   xml += `        <D:resourcetype/>\n`;
-  xml += `        <D:displayname>${escapeXml(fileName)}</D:displayname>\n`;
-  xml += `        <D:getcontentlength>${sizeBytes}</D:getcontentlength>\n`;
-  xml += `        <D:getcontenttype>${mimeType}</D:getcontenttype>\n`;
-  xml += `        <D:getetag>&quot;${track.id}-${sizeBytes}&quot;</D:getetag>\n`;
+  xml += `        <D:displayname>+escapeXml(fileName)}</D:displayname>\n`;
+  xml += `        <D:getcontentlength>+sizeBytes}</D:getcontentlength>\n`;
+  xml += `        <D:getcontenttype>+mimeType}</D:getcontenttype>\n`;
+  xml += `        <D:getetag>&quot;+track.id}-+sizeBytes}&quot;</D:getetag>\n`;
   xml += `        <D:getlastmodified>Sat, 26 Sep 2026 00:00:00 GMT</D:getlastmodified>\n`;
   xml += `      </D:prop>\n`;
   xml += `      <D:status>HTTP/1.1 200 OK</D:status>\n`;
@@ -2846,7 +2846,7 @@ function getWebDavArtistMap() {
 
 app.all(['/dav', '/dav/*'], async (req, res) => {
   const method = req.method.toUpperCase();
-  const basePrefix = req.secretPrefix ? `/${req.secretPrefix}` : '';
+  const basePrefix = req.secretPrefix ? `/+req.secretPrefix}` : '';
 
   if (method === 'OPTIONS') {
     res.setHeader('DAV', '1, 2');
@@ -2874,12 +2874,12 @@ app.all(['/dav', '/dav/*'], async (req, res) => {
     if (!subPath) {
       let xml = `<?xml version="1.0" encoding="utf-8" ?>\n<D:multistatus xmlns:D="DAV:">\n`;
       xml += `  <D:response>\n`;
-      xml += `    <D:href>${basePrefix}/dav/</D:href>\n`;
+      xml += `    <D:href>+basePrefix}/dav/</D:href>\n`;
       xml += `    <D:propstat>\n`;
       xml += `      <D:prop>\n`;
       xml += `        <D:resourcetype><D:collection/></D:resourcetype>\n`;
       xml += `        <D:displayname>TeleMusic Library</D:displayname>\n`;
-      xml += `        <D:getlastmodified>${new Date().toUTCString()}</D:getlastmodified>\n`;
+      xml += `        <D:getlastmodified>+new Date().toUTCString()}</D:getlastmodified>\n`;
       xml += `      </D:prop>\n`;
       xml += `      <D:status>HTTP/1.1 200 OK</D:status>\n`;
       xml += `    </D:propstat>\n`;
@@ -2889,7 +2889,7 @@ app.all(['/dav', '/dav/*'], async (req, res) => {
         for (const track of trackIndex) {
           const fileName = getTrackWebDavFileName(track);
           const album = getTrackWebDavAlbum(track);
-          const itemHref = `${basePrefix}/dav/${encodeURIComponent(album)}/${encodeURIComponent(fileName)}`;
+          const itemHref = `+basePrefix}/dav/+encodeURIComponent(album)}/+encodeURIComponent(fileName)}`;
           xml += buildWebDavFileXml(itemHref, fileName, track);
         }
       }
@@ -2903,11 +2903,11 @@ app.all(['/dav', '/dav/*'], async (req, res) => {
     if (matchingTracks.length > 0) {
       const albumName = getTrackWebDavAlbum(matchingTracks[0]);
       let xml = `<?xml version="1.0" encoding="utf-8" ?>\n<D:multistatus xmlns:D="DAV:">\n`;
-      xml += buildWebDavCollectionXml(`${basePrefix}/dav/${encodeURIComponent(albumName)}/`, albumName);
+      xml += buildWebDavCollectionXml(`+basePrefix}/dav/+encodeURIComponent(albumName)}/`, albumName);
       if (depth !== '0') {
         for (const track of matchingTracks) {
           const fileName = getTrackWebDavFileName(track);
-          const itemHref = `${basePrefix}/dav/${encodeURIComponent(albumName)}/${encodeURIComponent(fileName)}`;
+          const itemHref = `+basePrefix}/dav/+encodeURIComponent(albumName)}/+encodeURIComponent(fileName)}`;
           xml += buildWebDavFileXml(itemHref, fileName, track);
         }
       }
@@ -2929,7 +2929,7 @@ app.all(['/dav', '/dav/*'], async (req, res) => {
 
     const fileName = getTrackWebDavFileName(track);
     const album = getTrackWebDavAlbum(track);
-    const itemHref = `${basePrefix}/dav/${encodeURIComponent(album)}/${encodeURIComponent(fileName)}`;
+    const itemHref = `+basePrefix}/dav/+encodeURIComponent(album)}/+encodeURIComponent(fileName)}`;
     let xml = `<?xml version="1.0" encoding="utf-8" ?>\n<D:multistatus xmlns:D="DAV:">\n`;
     xml += buildWebDavFileXml(itemHref, fileName, track);
     xml += `</D:multistatus>`;
@@ -2939,7 +2939,7 @@ app.all(['/dav', '/dav/*'], async (req, res) => {
   if (method === 'GET' || method === 'HEAD') {
     if (!subPath) {
       if (method === 'HEAD') return res.status(200).end();
-      return res.send(`TeleMusic WebDAV Server is active. ${trackIndex.length} tracks available.`);
+      return res.send(`TeleMusic WebDAV Server is active. +trackIndex.length} tracks available.`);
     }
 
     const targetFile = segments.length > 0 ? segments[segments.length - 1] : subPath;
@@ -3028,7 +3028,7 @@ app.get('/', (req, res) => {
     version: pkg.version,
     app: 'BitChord Telegram Music Addon',
     tracksCount: trackIndex.length,
-    manifest: `${getBaseUrl(req)}/manifest.json`,
+    manifest: `+getBaseUrl(req)}/manifest.json`,
   });
 });
 
@@ -3055,10 +3055,10 @@ async function resolveChannel(channelInput = CHANNEL) {
 
       if (
         entityId === cleanInput ||
-        `-100${entityId}` === cleanInput ||
+        `-100+entityId}` === cleanInput ||
         entityId === target ||
         entityId === stripped ||
-        `-100${entityId}` === target ||
+        `-100+entityId}` === target ||
         (username && (username === stripped || username === target.toLowerCase())) ||
         title === cleanInput.toLowerCase() ||
         title === target.toLowerCase()
@@ -3103,7 +3103,7 @@ async function cleanupOrphanedDuplicateNotices() {
     }
     if (toDelete.size > 0) {
       const deleteIds = Array.from(toDelete);
-      logCli('CLEANUP', `Processing ${BOLD}${deleteIds.length}${RESET} duplicate notice/file(s) on server restart`);
+      logCli('CLEANUP', `Processing +BOLD}+deleteIds.length}+RESET} duplicate notice/file(s) on server restart`);
       for (const id of deleteIds) {
         deleteMessageViaBot(id).catch(() => {});
       }
@@ -3167,7 +3167,7 @@ async function startTelegramService() {
     const currentChannel = cleanEnv(process.env.TELEGRAM_CHANNEL) || env.TELEGRAM_CHANNEL || CHANNEL;
     channelEntity = await resolveChannel(currentChannel);
     if (!channelEntity) {
-      logCli('CHANNEL', `Could not access or find channel: ${BOLD}"${currentChannel}"${RESET}. Check permissions or channel ID.`);
+      logCli('CHANNEL', `Could not access or find channel: +BOLD}"+currentChannel}"+RESET}. Check permissions or channel ID.`);
       return;
     }
 extraChannelEntities.clear();
@@ -3180,9 +3180,9 @@ extraChannelEntities.clear();
           const peerIdStr = utils.getPeerId(extraEnt).toString();
           extraChannelEntities.set(peerIdStr, extraEnt);
           const eTitle = extraEnt.title  extraEnt.username  extraInput;
-          logCli('CHANNEL', Connected extra channel (read-only): ${BOLD}${eTitle}${RESET} ${DIM}(ID: ${extraEnt.id})${RESET});
+          logCli('CHANNEL', Connected extra channel (read-only): +BOLD}+eTitle}+RESET} +DIM}(ID: +extraEnt.id})+RESET});
         } else {
-          logCli('CHANNEL', Could not access extra channel: ${BOLD}"${extraInput}"${RESET});
+          logCli('CHANNEL', Could not access extra channel: +BOLD}"+extraInput}"+RESET});
         }
       }
     }
@@ -3234,9 +3234,9 @@ extraChannelEntities.clear();
                 cancelled.track.keep = true;
                 trackIndex.unshift(cancelled.track);
                 saveCache();
-                console.log(`[Keep Flag] Preserved duplicate track "${cancelled.track.title}" (msg ID: ${targetKey}) via keep command.`);
+                console.log(`[Keep Flag] Preserved duplicate track "+cancelled.track.title}" (msg ID: +targetKey}) via keep command.`);
                 const confirmMsg = await sendChannelMessage(
-                  `✅ <b>Preserved:</b> "${cancelled.track.title}" will be kept in your library.`,
+                  `✅ <b>Preserved:</b> "+cancelled.track.title}" will be kept in your library.`,
                   { parseMode: 'html' }
                 ).catch(() => null);
                 if (confirmMsg) {
@@ -3277,7 +3277,7 @@ const msgPeerIdStr = message.peerId ? utils.getPeerId(message.peerId).toString()
           if (!isMusicChannel && !isExtraChannel) return;
 
           if (isExtraChannel) {
-            const compoundId = ${msgPeerIdStr}'_'${message.id};
+            const compoundId = +msgPeerIdStr}'_'+message.id};
             const track = await parseTrackMessage(message, true, compoundId, true);
             if (track && !trackIndex.some((t) => String(t.id) === compoundId)) {
               indexTrackKeywords(track);
@@ -3304,7 +3304,7 @@ const msgPeerIdStr = message.peerId ? utils.getPeerId(message.peerId).toString()
           const isSystemText = SYSTEM_PREFIXES.some(p => trimmedText.startsWith(p));
 
           if (!isCommand && !hasButtons && !isBotSender && !isSystemText) {
-            console.log(`[Channel Cleaner] Auto-purging user non-music message (msg ID: ${message.id}): "${trimmedText.slice(0, 30)}"`);
+            console.log(`[Channel Cleaner] Auto-purging user non-music message (msg ID: +message.id}): "+trimmedText.slice(0, 30)}"`);
             client.deleteMessages(channelEntity, [message.id], { revoke: true }).catch(() => {
               deleteMessageViaBot(message.id).catch(() => {});
             });
@@ -3363,10 +3363,10 @@ function tryOpenBrowser(url) {
     const { exec } = require('child_process');
     const cmd =
       process.platform === 'win32'
-        ? `start "" "${url}"`
+        ? `start "" "+url}"`
         : process.platform === 'darwin'
-        ? `open "${url}"`
-        : `xdg-open "${url}"`;
+        ? `open "+url}"`
+        : `xdg-open "+url}"`;
     const child = exec(cmd, () => {});
     if (child && typeof child.unref === 'function') {
       child.unref();
@@ -3376,21 +3376,21 @@ function tryOpenBrowser(url) {
 
 function printUrlBanner(label, urlStr) {
   console.log('');
-  console.log(`  ${label}:`);
-  console.log(`  ${urlStr}`);
+  console.log(`  +label}:`);
+  console.log(`  +urlStr}`);
 }
 
 (async () => {
   try {
     app.listen(PORT, '0.0.0.0', async () => {
       const secretAtStart = getUrlSecret();
-      const secretPath = secretAtStart ? `/${secretAtStart}` : '';
-      const localManifest = `http://localhost:${PORT}${secretPath}/manifest.json`;
+      const secretPath = secretAtStart ? `/+secretAtStart}` : '';
+      const localManifest = `http://localhost:+PORT}+secretPath}/manifest.json`;
 
       console.log('');
-      console.log(`  Telegram Music Addon server running on: http://0.0.0.0:${PORT}`);
-      console.log(`  Setup Wizard: http://localhost:${PORT}/setup`);
-      console.log(`  Local Manifest URL: ${localManifest}`);
+      console.log(`  Telegram Music Addon server running on: http://0.0.0.0:+PORT}`);
+      console.log(`  Setup Wizard: http://localhost:+PORT}/setup`);
+      console.log(`  Local Manifest URL: +localManifest}`);
       if (secretAtStart) {
         console.log(`  [Security] URL_SECRET protection active: unauthorized public requests will be blocked.`);
       }
@@ -3400,9 +3400,9 @@ function printUrlBanner(label, urlStr) {
       if (enableTunnel) {
         tunnel.startTunnel(PORT).then(url => {
           const secret = getUrlSecret();
-          const sPath = secret ? `/${secret}` : '';
-          console.log(`[Cloudflare HTTPS Tunnel]: ${url}`);
-          printUrlBanner('BitChord Addon URL (HTTPS for phone)', `${url}${sPath}/manifest.json`);
+          const sPath = secret ? `/+secret}` : '';
+          console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
+          printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+sPath}/manifest.json`);
         }).catch(err => {
           console.warn('[Cloudflare Tunnel Warning]:', err.message);
         });
@@ -3412,7 +3412,7 @@ function printUrlBanner(label, urlStr) {
       const shouldOpenBrowser = !configured || process.env.OPEN_BROWSER === 'true' || process.argv.includes('--open');
       if (shouldOpenBrowser) {
         setTimeout(() => {
-          tryOpenBrowser(`http://localhost:${PORT}/setup`);
+          tryOpenBrowser(`http://localhost:+PORT}/setup`);
         }, 1000);
       }
 
@@ -3422,7 +3422,7 @@ function printUrlBanner(label, urlStr) {
         console.log('=================================================================');
         console.log('         Telegram Music Setup Required                           ');
         console.log('=================================================================');
-        console.log(`\nOpening http://localhost:${PORT}/setup in your browser to complete onboarding.\n`);
+        console.log(`\nOpening http://localhost:+PORT}/setup in your browser to complete onboarding.\n`);
       }
 
       setupApi.setOnConfigSaved(async (updates) => {
@@ -3448,9 +3448,9 @@ function printUrlBanner(label, urlStr) {
         if (updates.ENABLE_CLOUDFLARE_TUNNEL !== 'false') {
           tunnel.startTunnel(parseInt(updates.PORT || PORT, 10)).then(url => {
             const secret = getUrlSecret();
-            const secretPath = secret ? `/${secret}` : '';
-            console.log(`[Cloudflare HTTPS Tunnel]: ${url}`);
-            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `${url}${secretPath}/manifest.json`);
+            const secretPath = secret ? `/+secret}` : '';
+            console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
+            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+secretPath}/manifest.json`);
           }).catch(err => {
             console.warn('[Cloudflare Tunnel Warning]:', err.message);
           });
@@ -3473,16 +3473,16 @@ function printUrlBanner(label, urlStr) {
           try {
             const url = await tunnel.startTunnel(parseInt(process.env.PORT || PORT, 10));
             const secret = getUrlSecret();
-            const secretPath = secret ? `/${secret}` : '';
-            console.log(`[Cloudflare HTTPS Tunnel]: ${url}`);
-            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `${url}${secretPath}/manifest.json`);
+            const secretPath = secret ? `/+secret}` : '';
+            console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
+            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+secretPath}/manifest.json`);
           } catch (tErr) {
             console.warn('[Cloudflare Tunnel Warning]:', tErr.message);
           }
         }
 
         await startTelegramService();
-        console.log(`[Restart] Service restart complete. ${trackIndex.length} track(s) ready.\n`);
+        console.log(`[Restart] Service restart complete. +trackIndex.length} track(s) ready.\n`);
         return { tracksCount: trackIndex.length, tunnelUrl: tunnel.getTunnelUrl() };
       });
     });
