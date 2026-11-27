@@ -256,7 +256,8 @@ function centerText(text, width = 10) {
 
 function getCliTag(tag) {
   const centeredTag = centerText(tag.toUpperCase(), 10);
-  return `+DIM}|+RESET}+BOLD}+centeredTag}+RESET}+DIM}|+RESET}`;
+  return '[' + centeredTag + ']';
+
 }
 
 function logCli(tag, msg) {
@@ -267,8 +268,9 @@ function logCli(tag, msg) {
   }
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');
-  const timeStr = `+DIM}+pad(d.getHours())}:+pad(d.getMinutes())}:+pad(d.getSeconds())}+RESET}`;
-  console.log(`+timeStr} +getCliTag(tag)} +msg}`);
+  const timeStr = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+console.log(timeStr + ' ' + getCliTag(tag) + ' ' + msg);
+
   if (upperTag === 'LIBRARY') {
     hasInsertedStartupGap = false;
   }
@@ -2488,14 +2490,14 @@ async function streamAudioTrack(trackId, req, res) {
         lastSeekStart = 0;
         const sizeMb = (totalSize / (1024 * 1024)).toFixed(1);
         const spec = track.isAtmos ? 'Dolby Atmos' : (track.quality || track.format);
-        const durPartFormatted = durStr ? ` +DIM}(+durStr})+RESET}` : '';
+        const durPartFormatted = durStr ? '(+durStr+')' : '';
         const tag = isWebDav ? 'WEBDAV' : (isRange ? 'STREAM' : 'PRECACHE');
-        logCli(tag, +ITALIC}+track.title}+RESET} • +BOLD}+spec}+RESET} • +BOLD}+sizeMb} MB+RESET}+durPartFormatted} +DIM}-> +statusStr}+RESET}`);
+        logCli(tag, track.title, spec, sizeMb +'MB', statusStr);
       }
     };
 
     if (isAudition && !isWebDav && process.env.DEBUG_PROBES === 'true') {
-      logCli('PROBE', +ITALIC}+track.title}+RESET} +DIM}(+Math.round(bytesNeeded / 1024)} KB header read)+RESET}`);
+      logCli('PROBE', track.title, Math.round(bytesNeeded / 1024) + 'KB header read');
     } else if (isRange && start >= 10 * 1024 * 1024 && bytesNeeded > 128 * 1024) {
       const now = Date.now();
       if ((now - lastSeekLogTime > 2000) || Math.abs(start - lastSeekStart) > 2 * 1024 * 1024) {
@@ -2506,7 +2508,7 @@ async function streamAudioTrack(trackId, req, res) {
         const seekTimeStr = formatTrackDuration(seekSec) || '0:00';
         const percent = Math.round(seekRatio * 100);
         const seekMb = (start / (1024 * 1024)).toFixed(1);
-        logCli('SEEK', +ITALIC}+track.title}+RESET} • +BOLD}Seeked to ~+seekTimeStr}+RESET} +DIM}(+percent}%) • +seekMb} MB+RESET});
+        logCli('SEEK', track.title,'Seeked to' +seekTimeStr+'('+percent+'%'+seekMb+'MB)');
       }
     }
 
@@ -2515,9 +2517,9 @@ async function streamAudioTrack(trackId, req, res) {
       type: 'audio',
       id: trackId,
       range: range || 'none',
-      bytes: `+start}-+end}/+totalSize}`,
+      bytes: start+'-'+end+'/'+totalSize,
       bytesNeeded,
-      track: `+track.title} - +track.artist}`,
+      track: track.title+ '-' +track.artist,
     });
 
     res.status(isRange ? 206 : 200);
@@ -2620,10 +2622,10 @@ async function streamAudioTrack(trackId, req, res) {
               fastStartCache.set(trackId, fullPreamble);
               tagSliceCache.set(trackId, fullPreamble.slice(0, Math.min(fullPreamble.length, 256 * 1024)));
               const sizeFormatted = fullPreamble.length >= 1024 * 1024
-                ? `+(fullPreamble.length / (1024 * 1024)).toFixed(1)} MB`
-                : `+Math.round(fullPreamble.length / 1024)} KB`;
+                ? +(fullPreamble.length / (1024 * 1024)).toFixed(1)+ 'MB'
+                : +Math.round(fullPreamble.length / 1024)+ 'KB';
               if (!isWebDav) {
-                logCli('BUFFER', Prewarmed +BOLD}+sizeFormatted}+RESET} -> ID: +BOLD}+trackId}+RESET});
+                logCli('BUFFER', 'Prewarmed' +sizeFormatted+ '-> ID:' +trackId);
               }
             } else {
               const partial = Buffer.concat(preambleChunks);
@@ -3103,7 +3105,7 @@ async function cleanupOrphanedDuplicateNotices() {
     }
     if (toDelete.size > 0) {
       const deleteIds = Array.from(toDelete);
-      logCli('CLEANUP', Processing +BOLD}+deleteIds.length}+RESET} duplicate notice/file(s) on server restart);
+      logCli('CLEANUP', 'Processing' +deleteIds.length+ 'duplicate notice/file(s) on server restart');
       for (const id of deleteIds) {
         deleteMessageViaBot(id).catch(() => {});
       }
@@ -3167,7 +3169,7 @@ async function startTelegramService() {
     const currentChannel = cleanEnv(process.env.TELEGRAM_CHANNEL) || env.TELEGRAM_CHANNEL || CHANNEL;
     channelEntity = await resolveChannel(currentChannel);
     if (!channelEntity) {
-      logCli('CHANNEL', 'Could not access or find channel:' +BOLD}"+currentChannel}"+RESET}. Check permissions or channel ID.);
+      logCli('CHANNEL', 'Could not access or find channel:' +currentChannel+'. Check permissions or channel ID.');
       return;
     }
 extraChannelEntities.clear();
@@ -3179,10 +3181,10 @@ extraChannelEntities.clear();
         if (extraEnt) {
           const peerIdStr = utils.getPeerId(extraEnt).toString();
           extraChannelEntities.set(peerIdStr, extraEnt);
-          const eTitle = extraEnt.title  extraEnt.username  extraInput;
-          logCli('CHANNEL', 'Connected extra channel (read-only):' +BOLD}+eTitle}+RESET} +DIM}(ID: +extraEnt.id})+RESET});
+          const eTitle = extraEnt.title ? extraEnt.title: (extraEnt.username ? extraEnt.username: extraInput);
+          logCli('CHANNEL', 'Connected extra channel (read-only):' +eTitle);
         } else {
-          logCli('CHANNEL', 'Could not access extra channel:' +BOLD}"+extraInput}"+RESET});
+          logCli('CHANNEL', 'Could not access extra channel:' +extraInput);
         }
       }
     }
@@ -3376,33 +3378,36 @@ function tryOpenBrowser(url) {
 
 function printUrlBanner(label, urlStr) {
   console.log('');
-  console.log(`  +label}:`);
-  console.log(`  +urlStr}`);
-}
+        console.log('  ' + label1 + ':');
+      console.log('  ' + urlStr);
+    }
+  }
 
-(async () => {
-  try {
-    app.listen(PORT, '0.0.0.0', async () => {
-      const secretAtStart = getUrlSecret();
-      const secretPath = secretAtStart ? `/+secretAtStart}` : '';
-      const localManifest = `http://localhost:+PORT}+secretPath}/manifest.json`;
+  (async () => {
+    try {
+      app.listen(PORT, '0.0.0.0', async () => {
+        const secretAtStart = getUrlSecret();
+        const secretPath = secretAtStart ? '/' + secretAtStart : '';
+        const localManifest = 'http://localhost:' + PORT + secretPath + '/manifest.json';
 
-      console.log('');
-      console.log(`  Telegram Music Addon server running on: http://0.0.0.0:+PORT}`);
-      console.log(`  Setup Wizard: http://localhost:+PORT}/setup`);
-      console.log(`  Local Manifest URL: +localManifest}`);
-      if (secretAtStart) {
-        console.log(`  [Security] URL_SECRET protection active: unauthorized public requests will be blocked.`);
-      }
-      console.log('');
+        console.log('');
+        console.log('  Telegram Music Addon server running on: http://0.0.0.0:' + PORT);
+        console.log('  Setup Wizard: http://localhost:' + PORT + '/setup');
+        console.log('  Local Manifest URL: ' + localManifest);
+        if (secretAtStart) {
+          console.log('  [Security] URL_SECRET protection active: unauthorized public requests will be blocked.');
+        }
+        console.log('');
+
 
       const enableTunnel = process.env.ENABLE_CLOUDFLARE_TUNNEL !== 'false';
       if (enableTunnel) {
         tunnel.startTunnel(PORT).then(url => {
           const secret = getUrlSecret();
-          const sPath = secret ? `/+secret}` : '';
-          console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
-          printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+sPath}/manifest.json`);
+                      const sPath = secret ? '/' + secret : '';
+            console.log('[Cloudflare HTTPS Tunnel]: ' + url);
+            printUrlBanner('BitChord Addon URL (HTTPS for phone)', url + sPath + '/manifest.json');
+
         }).catch(err => {
           console.warn('[Cloudflare Tunnel Warning]:', err.message);
         });
@@ -3448,9 +3453,10 @@ function printUrlBanner(label, urlStr) {
         if (updates.ENABLE_CLOUDFLARE_TUNNEL !== 'false') {
           tunnel.startTunnel(parseInt(updates.PORT || PORT, 10)).then(url => {
             const secret = getUrlSecret();
-            const secretPath = secret ? `/+secret}` : '';
-            console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
-            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+secretPath}/manifest.json`);
+                      const secretPath = secret ? '/' + secret : '';
+          console.log('[Cloudflare HTTPS Tunnel]: ' + url);
+          printUrlBanner('BitChord Addon URL (HTTPS for phone)', url + secretPath + '/manifest.json');
+
           }).catch(err => {
             console.warn('[Cloudflare Tunnel Warning]:', err.message);
           });
@@ -3473,16 +3479,17 @@ function printUrlBanner(label, urlStr) {
           try {
             const url = await tunnel.startTunnel(parseInt(process.env.PORT || PORT, 10));
             const secret = getUrlSecret();
-            const secretPath = secret ? `/+secret}` : '';
-            console.log(`[Cloudflare HTTPS Tunnel]: +url}`);
-            printUrlBanner('BitChord Addon URL (HTTPS for phone)', `+url}+secretPath}/manifest.json`);
-          } catch (tErr) {
-            console.warn('[Cloudflare Tunnel Warning]:', tErr.message);
-          }
-        }
+                  const secretPath = secret ? '/' + secret : '';
+      console.log('[Cloudflare HTTPS Tunnel]: ' + url);
+      printUrlBanner('BitChord Addon URL (HTTPS for phone)', url + secretPath + '/manifest.json');
+    } catch (err) {
+      console.warn('[Cloudflare Tunnel Warning]:', err.message);
+    }
+  }
 
-        await startTelegramService();
-        console.log(`[Restart] Service restart complete. +trackIndex.length} track(s) ready.\n`);
+  await startTelegramService();
+  console.log('[Restart] Service restart complete. ' + trackIndex.length + ' track(s) ready.\n');
+
         return { tracksCount: trackIndex.length, tunnelUrl: tunnel.getTunnelUrl() };
       });
     });
