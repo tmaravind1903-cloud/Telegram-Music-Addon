@@ -102,6 +102,15 @@ function getLibraryTracksCount() {
 
 function readEnvMap() {
   const map = {};
+  for (const [k, v] of Object.entries(process.env)) {
+    if (typeof v === 'string' && v.trim() !== '') {
+      let val = v.trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      map[k] = val;
+    }
+  }
   if (fs.existsSync(envPath)) {
     const lines = fs.readFileSync(envPath, 'utf-8').split('\n');
     for (const line of lines) {
