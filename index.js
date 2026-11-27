@@ -453,7 +453,6 @@ function getBaseUrl(req) {
 }
 
   
-}
 
 async function getMediaChunk(media, offset = 0, maxBytes = 128 * 1024) {
   const chunks = [];
