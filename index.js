@@ -3379,10 +3379,11 @@ function tryOpenBrowser(url) {
 
 function printUrlBanner(label, urlStr) {
   console.log('');
-        console.log('  ' + label1 + ':');
-      console.log('  ' + urlStr);
-    }
-  }
+  console.log('  ' + label + ':');
+  console.log('  ' + urlStr);
+}
+
+  
 
   (async () => {
     try {
