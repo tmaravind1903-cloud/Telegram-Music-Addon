@@ -56,6 +56,7 @@ const API_ID = parseInt(cleanEnv(process.env.TELEGRAM_API_ID), 10);
 const API_HASH = cleanEnv(process.env.TELEGRAM_API_HASH);
 let SESSION_STRING = cleanEnv(process.env.TELEGRAM_SESSION_STRING);
 const CHANNEL = cleanEnv(process.env.TELEGRAM_CHANNEL);
+const EXTRA_CHANNELS_RAW = cleanEnv(process.env.EXTRA_CHANNELS);
 // Optional local TeleDrive synchronization module (gitignored)
 let teledrive = null;
 try {
@@ -155,6 +156,7 @@ if (API_ID && API_HASH) {
 }
 
 let channelEntity = null;
+const extraChannelEntities = new Map(); // peerIdStr -> entity
 let isTelegramReady = false;
 let trackIndex = [];
 let lastIndexed = 0;
@@ -383,14 +385,27 @@ async function getMediaForTrack(trackId, forceRefresh = false) {
     return mediaCache.get(key);
   }
   try {
-    const messages = await client.getMessages(channelEntity, { ids: [parseInt(trackId, 10)] });
-    const targetMsg = messages && messages.find((m) => m && String(m.id) === key);
+    let targetEntity = channelEntity;
+    let rawMsgId = parseInt(key, 10);
+
+    if (key.includes('_')) {
+      const [peerIdStr, msgIdPart] = key.split('_');
+      rawMsgId = parseInt(msgIdPart, 10);
+      if (extraChannelEntities.has(peerIdStr)) {
+        targetEntity = extraChannelEntities.get(peerIdStr);
+      }
+    }
+
+    if (!targetEntity || isNaN(rawMsgId)) return null;
+
+    const messages = await client.getMessages(targetEntity, { ids: [rawMsgId] });
+    const targetMsg = messages && messages.find((m) => m && m.id === rawMsgId);
     if (targetMsg && targetMsg.media) {
       mediaCache.set(key, targetMsg.media);
       return targetMsg.media;
     }
   } catch (err) {
-    console.error(`Failed to fetch media for track ${trackId}:`, err.message);
+    console.error(Failed to fetch media for track ${trackId}:, err.message);
   }
   return null;
 }
@@ -588,12 +603,19 @@ async function prewarmTrackPreamble(trackId, media, title) {
   }
 }
 
-async function parseTrackMessage(msg, cacheMedia = true) {
+async function parseTrackMessage(msg, cacheMedia = true, customTrackId = null, isReadOnlyChannel = false) {
   if (!msg.media || !msg.media.document) return null;
 
-  // Strictly only cache media belonging to the Music Library channel
-  if (cacheMedia && channelEntity && msg.peerId && utils.getPeerId(msg.peerId).toString() === utils.getPeerId(channelEntity).toString()) {
-    mediaCache.set(String(msg.id), msg.media);
+  const trackIdStr = customTrackId ? String(customTrackId) : String(msg.id);
+
+  // Cache media belonging to primary or extra music library channels
+  if (cacheMedia && msg.peerId) {
+    const peerIdStr = utils.getPeerId(msg.peerId).toString();
+    const isPrimary = channelEntity && peerIdStr === utils.getPeerId(channelEntity).toString();
+    const isExtra = extraChannelEntities.has(peerIdStr);
+    if (isPrimary || isExtra) {
+      mediaCache.set(trackIdStr, msg.media);
+    }
   }
 
   const doc = msg.media.document;
@@ -737,10 +759,11 @@ async function parseTrackMessage(msg, cacheMedia = true) {
     qualityText = `${formatName.toUpperCase()} (${rawKbps || 320}kbps)`;
   }
 
-  const keep = msgText.toLowerCase().includes('/keep') || msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
+const keep = isReadOnlyChannel  msgText.toLowerCase().includes('/keep')  msgText.toLowerCase().includes('/ig') || msgText.toLowerCase().includes('#keep');
 
   return {
-    id: String(msg.id),
+    id: trackIdStr,
+    isExternal: isReadOnlyChannel || undefined,
     title: title || fallbackTitle,
     artist: formatArtistForClient(artist || 'Unknown Artist'),
     album: album || undefined,
@@ -1468,6 +1491,49 @@ async function buildTrackIndex() {
         trackIndex = newIndex;
         saveCache();
       }
+    }
+
+// Scan read-only EXTRA_CHANNELS
+    for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
+      const extraTitle = extraEntity.title  extraEntity.username  peerIdStr;
+      logCli('INDEX', Scanning extra channel: ${BOLD}${extraTitle}${RESET}...);
+      let extraCount = 0;
+
+      for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
+        const compoundId = ${peerIdStr}_${msg.id};
+        if (seenIds.has(compoundId)) continue;
+        seenIds.add(compoundId);
+
+        const doc = msg.media?.document;
+        if (!doc || !isAudioDocument(doc)) {
+          continue;
+        }
+
+        mediaCache.set(compoundId, msg.media);
+
+        const existing = trackIndex.find((t) => t.id === compoundId);
+        if (existing) {
+          existing.keep = true;
+          existing.isExternal = true;
+          if (!existing.sizeBytes && doc.size) {
+            existing.sizeBytes = Number(doc.size);
+          }
+          newIndex.push(existing);
+        } else {
+          const parsed = await parseTrackMessage(msg, true, compoundId, true);
+          if (parsed) {
+            newIndex.push(parsed);
+          }
+        }
+
+        extraCount++;
+        batchCount++;
+        if (batchCount % 50 === 0) {
+          trackIndex = newIndex;
+          saveCache();
+        }
+      }
+      logCli('INDEX', Finished ${BOLD}${extraTitle}${RESET}: ${BOLD}${extraCount}${RESET} tracks indexed);
     }
 
     trackIndex = newIndex;
@@ -3104,9 +3170,22 @@ async function startTelegramService() {
       logCli('CHANNEL', `Could not access or find channel: ${BOLD}"${currentChannel}"${RESET}. Check permissions or channel ID.`);
       return;
     }
-    const chanTitle = channelEntity.title || channelEntity.username || currentChannel;
-    const chanId = channelEntity.id ? ` ${DIM}(ID: ${channelEntity.id})${RESET}` : '';
-    logCli('CHANNEL', `Connected to ${BOLD}${chanTitle}${RESET}${chanId}`);
+extraChannelEntities.clear();
+    const extraRaw = cleanEnv(process.env.EXTRA_CHANNELS)  env.EXTRA_CHANNELS  EXTRA_CHANNELS_RAW;
+    if (extraRaw) {
+      const extraList = extraRaw.split(',').map((s) => s.trim()).filter(Boolean);
+      for (const extraInput of extraList) {
+        const extraEnt = await resolveChannel(extraInput);
+        if (extraEnt) {
+          const peerIdStr = utils.getPeerId(extraEnt).toString();
+          extraChannelEntities.set(peerIdStr, extraEnt);
+          const eTitle = extraEnt.title  extraEnt.username  extraInput;
+          logCli('CHANNEL', Connected extra channel (read-only): ${BOLD}${eTitle}${RESET} ${DIM}(ID: ${extraEnt.id})${RESET});
+        } else {
+          logCli('CHANNEL', Could not access extra channel: ${BOLD}"${extraInput}"${RESET});
+        }
+      }
+    }
 
     if (teledrive) {
       await teledrive.initTeleDrive(client, channelEntity, resolveChannel);
@@ -3192,7 +3271,23 @@ async function startTelegramService() {
             if (handled) return;
           }
 
-          if (!isMusicChannel) return;
+const msgPeerIdStr = message.peerId ? utils.getPeerId(message.peerId).toString() : '';
+          const isExtraChannel = msgPeerIdStr && extraChannelEntities.has(msgPeerIdStr);
+
+          if (!isMusicChannel && !isExtraChannel) return;
+
+          if (isExtraChannel) {
+            const compoundId = ${msgPeerIdStr}_${message.id};
+            const track = await parseTrackMessage(message, true, compoundId, true);
+            if (track && !trackIndex.some((t) => String(t.id) === compoundId)) {
+              indexTrackKeywords(track);
+              trackIndex.unshift(track);
+              saveCache();
+              rebuildWebDavFileMap();
+              queueUploadedTrackLog(track);
+            }
+            return;
+          }
 
           const track = await parseTrackMessage(message);
           if (track) {
