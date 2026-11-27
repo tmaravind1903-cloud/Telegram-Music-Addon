@@ -3280,7 +3280,7 @@ const msgPeerIdStr = message.peerId ? utils.getPeerId(message.peerId).toString()
           if (!isMusicChannel && !isExtraChannel) return;
 
           if (isExtraChannel) {
-            const compoundId = +msgPeerIdStr}'_'+message.id};
+            const compoundId = msgPeerIdStr+'_'+message.id;
             const track = await parseTrackMessage(message, true, compoundId, true);
             if (track && !trackIndex.some((t) => String(t.id) === compoundId)) {
               indexTrackKeywords(track);
