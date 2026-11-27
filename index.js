@@ -405,7 +405,7 @@ async function getMediaForTrack(trackId, forceRefresh = false) {
       return targetMsg.media;
     }
   } catch (err) {
-    console.error(Failed to fetch media for track ${trackId}:, err.message);
+    console.error('Failed to fetch media for track' ${trackId}':', err.message);
   }
   return null;
 }
