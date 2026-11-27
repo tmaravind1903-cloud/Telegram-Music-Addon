@@ -1496,7 +1496,7 @@ async function buildTrackIndex() {
 // Scan read-only EXTRA_CHANNELS
     for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
       const extraTitle = extraEntity.title || extraEntity.username || peerIdStr;
-      logCli('INDEX', 'Scanning extra channel:' +BOLD}+extraTitle}+RESET}...);
+      logCli('INDEX', 'Scanning extra channel:' +extraTitle);
       let extraCount = 0;
 
       for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
@@ -1533,7 +1533,7 @@ async function buildTrackIndex() {
           saveCache();
         }
       }
-      logCli('INDEX', 'Finished' +BOLD}+extraTitle}+RESET}: +BOLD}+extraCount}+RESET} tracks indexed);
+      logCli('INDEX', 'Finished' +extraTitle+':' +extraCount+ 'tracks indexed');
     }
 
     trackIndex = newIndex;
@@ -2181,9 +2181,9 @@ app.get('/search', async (req, res) => {
     if (q) {
       const topMatch = matches[0];
       const topStr = topMatch
-        ? ` -> ID: +BOLD}+topMatch.id}+RESET}`
-        : ` -> +DIM}No match+RESET}`;
-      logCli('SEARCH', +ITALIC}"+q}"+RESET} +DIM}(+matches.length} hits, +elapsed}ms)+RESET}+topStr}`);
+        ?  '-> ID:' +topMatch.id
+        :  '->  No match';
+      logCli('SEARCH',' " '+q+'"'('+matches.length+ 'hits,' +elapsed+ 'ms)'+topStr);
     }
     recordRequest({
       timestamp: new Date().toISOString(),
