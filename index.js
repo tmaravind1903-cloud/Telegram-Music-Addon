@@ -1495,12 +1495,12 @@ async function buildTrackIndex() {
 
 // Scan read-only EXTRA_CHANNELS
     for (const [peerIdStr, extraEntity] of extraChannelEntities.entries()) {
-      const extraTitle = extraEntity.title || extraEntity.username || peerIdStr;
+      const extraTitle = extraEntity.title ? extraEntity.title: (extraEntity.username ? extraEntity.username: peerIdStr);
       logCli('INDEX', 'Scanning extra channel:' +extraTitle);
       let extraCount = 0;
 
       for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
-        const compoundId = +peerIdStr}'_'+msg.id};
+        const compoundId = peerIdStr+'_'+msg.id;
         if (seenIds.has(compoundId)) continue;
         seenIds.add(compoundId);
 
