@@ -763,7 +763,7 @@ const keep = [Boolean(isReadOnlyChannel),  msgText.toLowerCase().includes('/keep
 
   return {
     id: trackIdStr,
-    isExternal: isReadOnlyChannel || true : undefined,
+    isExternal: isReadOnlyChannel || undefined,
     title: title || fallbackTitle,
     artist: formatArtistForClient(artist || 'Unknown Artist'),
     album: album || undefined,
