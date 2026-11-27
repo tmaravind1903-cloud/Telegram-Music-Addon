@@ -2490,7 +2490,8 @@ async function streamAudioTrack(trackId, req, res) {
         lastSeekStart = 0;
         const sizeMb = (totalSize / (1024 * 1024)).toFixed(1);
         const spec = track.isAtmos ? 'Dolby Atmos' : (track.quality || track.format);
-        const durPartFormatted = durStr ? '(+durStr+')' : '';
+        const durPartFormatted = durStr || '';
+
         const tag = isWebDav ? 'WEBDAV' : (isRange ? 'STREAM' : 'PRECACHE');
         logCli(tag, track.title, spec, sizeMb +'MB', statusStr);
       }
