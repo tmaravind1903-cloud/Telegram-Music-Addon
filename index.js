@@ -2183,7 +2183,7 @@ app.get('/search', async (req, res) => {
       const topStr = topMatch
         ?  '-> ID:' +topMatch.id
         :  '->  No match';
-      logCli('SEARCH',' " '+q+'"'('+matches.length+ 'hits,' +elapsed+ 'ms)'+topStr);
+      logCli('SEARCH',q, matches.lenght, topStr);
     }
     recordRequest({
       timestamp: new Date().toISOString(),
