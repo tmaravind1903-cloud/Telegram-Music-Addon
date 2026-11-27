@@ -1584,14 +1584,15 @@ app.use((req, res, next) => {
     return next();
   }
 
-  const prefix = `/+currentSecret}`;
-  const encodedPrefix = `/+encodeURIComponent(currentSecret)}`;
+    const prefix = '/' + currentSecret;
+  const encodedPrefix = '/' + encodeURIComponent(currentSecret);
   const matchedPrefix =
-    req.url === prefix || req.url.startsWith(`+prefix}/`) || req.url.startsWith(`+prefix}?`)
+    req.url === prefix || req.url.startsWith(prefix + '/') || req.url.startsWith(prefix + '?')
       ? prefix
-      : req.url === encodedPrefix || req.url.startsWith(`+encodedPrefix}/`) || req.url.startsWith(`+encodedPrefix}?`)
+      : req.url === encodedPrefix || req.url.startsWith(encodedPrefix + '/') || req.url.startsWith(encodedPrefix + '?')
       ? encodedPrefix
       : null;
+
 
   if (matchedPrefix) {
     req.secretPrefix = currentSecret;
