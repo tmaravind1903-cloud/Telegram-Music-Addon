@@ -333,7 +333,8 @@ function loadCache() {
         indexTrackKeywords(t);
         trackIndex.push(t);
       }
-      logCli('CACHE', `Loaded +BOLD${trackIndex.length${RESET} tracks from +source}`);
+      logCli('CACHE', 'Loaded ' + trackIndex.length + ' tracks from ' + source);
+
       updateMediaCacheCapacity();
       rebuildWebDavFileMap();
 
@@ -451,8 +452,7 @@ function getBaseUrl(req) {
   return 'http://' + host + prefix;
 }
 
-  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
-  return `+proto}://+host${prefix}`;
+  
 }
 
 async function getMediaChunk(media, offset = 0, maxBytes = 128 * 1024) {
@@ -577,7 +577,8 @@ async function prewarmTrackPreamble(trackId, media, title) {
             const sizeFormatted = preamble.length >= 1024 * 1024
               ? `+(preamble.length / (1024 * 1024)).toFixed(1)} MB`
               : `+Math.round(preamble.length / 1024)} KB`;
-            logCli('BUFFER', `Prewarmed +BOLD${sizeFormatted${RESET} -> ID: +BOLD${idStr${RESET}`);
+           logCli('BUFFER', 'Prewarmed ' + sizeFormatted + ' -> ID: ' + idStr);
+
           }
         }
         iter.left = 0;
@@ -951,7 +952,8 @@ function loadNotificationState() {
       if (data && Array.isArray(data.sentDigests)) notifState.sentDigests = data.sentDigests;
       if (data && typeof data.lastDigestSent === 'number') notifState.lastDigestSent = data.lastDigestSent;
       if (notifState.pending.length > 0 || notifState.sentDigests.length > 0) {
-        logCli('DIGEST', `Restored +BOLD${notifState.pending.length${RESET} pending notifications, +BOLD${notifState.sentDigests.length${RESET} active digest(s)`);
+       logCli('DIGEST', 'Restored ' + notifState.pending.length + ' pending notifications, ' + notifState.sentDigests.length + ' active digest(s)');
+
       }
     }
   } catch (err) {
@@ -1269,7 +1271,8 @@ function flushUploadBatch() {
   if (uploadBatch.length === 0) return;
   for (const t of uploadBatch) {
     const spec = t.isAtmos ? 'Dolby Atmos' : (t.quality || describeTrackQuality(t) || t.format);
-    logCli('INDEX', `+ITALIC${t.title${RESET} • +BOLD${t.artist${RESET} • +BOLD${spec${RESET}`);
+    logCli('INDEX', t.title + ' • ' + t.artist + ' • ' + spec);
+
   }
   uploadBatch = [];
   uploadBatchTimer = null;
@@ -1310,7 +1313,8 @@ async function processTrackUpload(newTrack) {
 
   if (scoreNew > scoreOld) {
     // Incoming track is HIGHER quality (e.g. 24/192 replacing 16/44.1, or FLAC replacing MP3)
-    logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} -> Upgraded from +describeTrackQuality(existingDup)} to +BOLD${describeTrackQuality(newTrack)${RESET} (Replacing ID: +existingDup.id})`);
+    logCli('DUPLICATE', newTrack.title + ' -> Upgraded from ' + describeTrackQuality(existingDup) + ' to ' + describeTrackQuality(newTrack) + ' (Replacing ID: ' + existingDup.id + ')');
+
 
     await deleteTelegramMessage(existingDup.id);
 
@@ -1338,7 +1342,8 @@ async function processTrackUpload(newTrack) {
     const reason = isLower ? 'lower_quality' : 'identical';
     const graceHours = Math.round(DUPLICATE_GRACE_PERIOD_MS / (60 * 60 * 1000));
     const graceText = graceHours >= 1 ? `+graceHours} hours` : `+Math.round(DUPLICATE_GRACE_PERIOD_MS / 1000)}s`;
-    logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} (ID: +BOLD${newTrack.id${RESET}) -> +reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy'} (Deleting in +graceText}, send /keep to save)`);
+    logCli('DUPLICATE', newTrack.title + ' (ID: ' + newTrack.id + ') -> ' + (reason === 'lower_quality' ? 'Lower quality copy' : 'Identical copy') + ' (Deleting in ' + graceText + ', send /keep to save)');
+
 
     pendingDeletions.set(String(newTrack.id), {
       timer: null,
@@ -1362,7 +1367,8 @@ async function processTrackUpload(newTrack) {
 
     const timer = setTimeout(async () => {
       pendingDeletions.delete(String(newTrack.id));
-      logCli('DUPLICATE', `+ITALIC${newTrack.title${RESET} (ID: +BOLD${newTrack.id${RESET}) -> Grace period expired, deleted from channel`);
+      logCli('DUPLICATE', newTrack.title + ' (ID: ' + newTrack.id + ') -> Grace period expired, deleted from channel');
+
       const msgsToDelete = [newTrack.id];
       if (noticeMsg && noticeMsg.id) {
         deleteMessageViaBot(noticeMsg.id).catch(() => {});
@@ -1421,7 +1427,8 @@ async function deduplicateEntireLibrary() {
     if (!dup) {
       kept.push(track);
     } else {
-      logCli('DUPLICATE', `+ITALIC${track.title${RESET} (ID: +BOLD${track.id${RESET}) -> Removed duplicate in favor of ID: +BOLD${dup.id${RESET}`);
+      logCli('DUPLICATE', track.title + ' (ID: ' + track.id + ') -> Removed duplicate in favor of ID: ' + dup.id);
+
       await deleteTelegramMessage(track.id);
       removed.push({ deleted: track, kept: dup });
 
@@ -1442,10 +1449,11 @@ async function deduplicateEntireLibrary() {
   if (removed.length > 0) {
     trackIndex = kept;
     saveCache();
-    logCli('LIBRARY', `Indexing complete: +BOLD${trackIndex.length${RESET} tracks loaded +DIM}• Removed +removed.length} duplicates+RESET}`);
+        logCli('LIBRARY', 'Indexing complete: ' + trackIndex.length + ' tracks loaded • Removed ' + removed.length + ' duplicates');
     await flushDigestNotifications();
   } else {
-    logCli('LIBRARY', `Indexing complete: +BOLD${trackIndex.length${RESET} tracks loaded +DIM}• Deduplication 100% clean+RESET}`);
+    logCli('LIBRARY', 'Indexing complete: ' + trackIndex.length + ' tracks loaded • Deduplication 100% clean');
+
   }
 
   await cleanupOrphanedDuplicateNotices().catch(() => {});
