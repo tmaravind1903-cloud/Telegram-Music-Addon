@@ -1500,7 +1500,7 @@ async function buildTrackIndex() {
       let extraCount = 0;
 
       for await (const msg of client.iterMessages(extraEntity, { waitTime: 0 })) {
-        const compoundId = ${peerIdStr}_${msg.id};
+        const compoundId = ${peerIdStr}'_'${msg.id};
         if (seenIds.has(compoundId)) continue;
         seenIds.add(compoundId);
 
@@ -3277,7 +3277,7 @@ const msgPeerIdStr = message.peerId ? utils.getPeerId(message.peerId).toString()
           if (!isMusicChannel && !isExtraChannel) return;
 
           if (isExtraChannel) {
-            const compoundId = ${msgPeerIdStr}_${message.id};
+            const compoundId = ${msgPeerIdStr}'_'${message.id};
             const track = await parseTrackMessage(message, true, compoundId, true);
             if (track && !trackIndex.some((t) => String(t.id) === compoundId)) {
               indexTrackKeywords(track);
